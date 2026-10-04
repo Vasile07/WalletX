@@ -102,6 +102,14 @@ Public routes:
 - `GET /transfers/{transferId}`
 - `GET /notifications` (or equivalent notification endpoint)
 
+A simulated deposit request supplies a positive decimal `amount` and `currency: "RON"`.
+The Wallet Service locks the owner-scoped wallet row and persists the balance update and
+completed deposit history entry in one database transaction. Deposit history is owner-scoped and
+ordered newest first. The response includes the deposit ID, wallet ID, amount, currency,
+resulting balance, and completion time. The `DepositCompletedEvent` contract carries the
+deposit, wallet, and user identifiers plus the amount, currency, and occurrence time for
+downstream history and notification integration.
+
 ### 5.2 Service-to-service communication
 
 #### Synchronous REST

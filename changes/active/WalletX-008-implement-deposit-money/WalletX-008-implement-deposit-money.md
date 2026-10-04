@@ -4,7 +4,7 @@
 
 - **ID:** WalletX-008
 - **Title:** Implement Deposit Money
-- **Status:** Todo
+- **Status:** Active
 - **Priority:** High
 - **Created:** 2026-10-04
 - **Updated:** 2026-10-04
@@ -32,14 +32,14 @@ Allow authenticated users to add simulated RON funds while recording the resulti
 
 ## Acceptance Criteria
 
-- [ ] Valid positive RON deposits update the owner’s balance atomically.
-- [ ] Invalid amounts, currencies, and wallet ownership are rejected.
-- [ ] A completed deposit is available to transaction history consumers.
+- [x] Valid positive RON deposits update the owner’s balance atomically.
+- [x] Invalid amounts, currencies, and wallet ownership are rejected.
+- [x] A completed deposit is available to transaction history consumers.
 
 ## Implementation Tasks
 
-- [ ] Implement deposit command, validation, and persistence.
-- [ ] Define the deposit result and integration event contract.
+- [x] Implement deposit command, validation, and persistence.
+- [x] Define the deposit result and integration event contract.
 
 ## Dependencies
 
