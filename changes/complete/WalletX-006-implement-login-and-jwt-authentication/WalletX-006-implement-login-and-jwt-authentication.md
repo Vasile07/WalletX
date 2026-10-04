@@ -4,7 +4,7 @@
 
 - **ID:** WalletX-006
 - **Title:** Implement Login and JWT Authentication
-- **Status:** Active
+- **Status:** Completed
 - **Priority:** Critical
 - **Created:** 2026-10-04
 - **Updated:** 2026-10-04
