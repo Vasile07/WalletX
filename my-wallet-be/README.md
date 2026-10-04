@@ -31,4 +31,8 @@ Each service exposes a basic readiness endpoint:
 - `/api/health`
 - `/actuator/health`
 
-Each service uses in-memory defaults and mock configuration so it can run without banking integrations or production infrastructure.
+The user service provides registration at `POST /auth/register`. It accepts a JSON body containing `name`, `email`, and `password`, and returns `201 Created` with the new user's `id`, `name`, and `email`. Invalid input returns `400 Bad Request`; an email that is already registered returns `409 Conflict`. Passwords are stored as BCrypt hashes and are not included in the response.
+
+The user service uses PostgreSQL. Configure its connection with `DATABASE_URL`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD`; local defaults point to `jdbc:postgresql://localhost:5432/walletx`.
+
+The services do not require banking integrations or production infrastructure.
