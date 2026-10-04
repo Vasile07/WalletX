@@ -4,7 +4,7 @@
 
 - **ID:** WalletX-004
 - **Title:** Define Service Architecture
-- **Status:** Todo
+- **Status:** Active
 - **Priority:** Critical
 - **Created:** 2026-10-04
 - **Updated:** 2026-10-04
@@ -31,14 +31,14 @@ Produce an architecture baseline that prevents duplicated business logic and unc
 
 ## Acceptance Criteria
 
-- [ ] Each domain responsibility and data boundary is documented.
-- [ ] Public routes and service-to-service communication are identified.
-- [ ] RON-only and simulated-deposit constraints are documented.
+- [x] Each domain responsibility and data boundary is documented.
+- [x] Public routes and service-to-service communication are identified.
+- [x] RON-only and simulated-deposit constraints are documented.
 
 ## Implementation Tasks
 
-- [ ] Create an architecture decision record and service boundary map.
-- [ ] Review boundaries against all project requirements.
+- [x] Create an architecture decision record and service boundary map.
+- [x] Review boundaries against all project requirements.
 
 ## Dependencies
 
