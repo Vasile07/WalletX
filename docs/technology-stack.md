@@ -7,8 +7,10 @@ This document records the current technology decisions for WalletX so future ses
 | Area | Decision | Purpose |
 |---|---|---|
 | Backend | Java with Spring Boot | Build the REST API and microservices |
+| Domain model boilerplate | Project Lombok | Reduce repetitive Java domain-class code while keeping state changes explicit |
 | Frontend | React | Build the WalletX web application |
-| Databases | PostgreSQL | Persist users, wallets, transfers, transactions, and notifications |
+| Database | One PostgreSQL database | Persist users, wallets, transfers, transactions, and notifications for the initial solo-developed version |
+| Persistence | Spring Data JPA with Hibernate | Java ORM for service-owned data in PostgreSQL |
 | Authentication | Spring Security with JWT | Secure REST endpoints and authenticate users |
 | API Gateway | Spring Cloud Gateway | Provide a single public entry point and route requests to services |
 | Message broker | RabbitMQ | Handle task-oriented communication and notification work |
@@ -22,9 +24,10 @@ This document records the current technology decisions for WalletX so future ses
 ## Architecture Decisions
 
 - WalletX will contain three main backend microservices: User Service, Wallet Service, and Transfer Service.
-- Each service should own its data and database boundaries where practical.
+- The initial version uses one shared PostgreSQL database. Services retain logical ownership of their domain tables and access other domains through APIs or events; separate databases are not required.
 - The frontend will be a React shell with modules for authentication, wallets, transfers, and notifications.
 - REST APIs will be protected with JWT bearer tokens.
+- Project Lombok will be used for domain classes to reduce boilerplate. Avoid generating setters by default so domain state changes remain explicit through constructors and domain methods.
 - RabbitMQ will be used for worker-style messaging, while Kafka will be used for event streaming.
 - The initial supported currency is RON only.
 - Deposits are simulated; no real banking or payment integration is required.
@@ -34,6 +37,7 @@ This document records the current technology decisions for WalletX so future ses
 ## Working Conventions
 
 - Prefer clear service boundaries over sharing business logic between services.
+- Use Lombok selectively for domain-model boilerplate; do not expose unrestricted setters by default.
 - Keep authentication and authorization checks on protected backend endpoints.
 - Validate that users can access only their own wallets and transactions.
 - Keep infrastructure configuration under `infra` and architecture documentation under `docs`.
