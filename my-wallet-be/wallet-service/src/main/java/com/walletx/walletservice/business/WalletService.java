@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface WalletService {
 
     List<WalletEntity> findAllByUserId(UUID userId);
+
+    WalletEntity createWallet(UUID userId);
 }

@@ -3,9 +3,12 @@ package com.walletx.walletservice.controller;
 import com.walletx.walletservice.business.WalletService;
 import com.walletx.walletservice.domain.WalletEntity;
 import com.walletx.walletservice.security.CurrentUserPrincipal;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,6 +31,13 @@ public class WalletController {
         return walletService.findAllByUserId(currentUserId).stream()
                 .map(WalletResponse::fromEntity)
                 .toList();
+    }
+
+    @PostMapping("/wallets")
+    public ResponseEntity<WalletResponse> createWallet(Authentication authentication) {
+        UUID currentUserId = resolveCurrentUserId(authentication);
+        WalletEntity createdWallet = walletService.createWallet(currentUserId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(WalletResponse.fromEntity(createdWallet));
     }
 
     private UUID resolveCurrentUserId(Authentication authentication) {

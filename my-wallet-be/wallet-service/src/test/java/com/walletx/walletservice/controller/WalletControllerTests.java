@@ -19,6 +19,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -54,8 +55,31 @@ class WalletControllerTests {
     }
 
     @Test
+    void createsWalletForAuthenticatedUser() throws Exception {
+        UUID currentUserId = UUID.randomUUID();
+        WalletEntity createdWallet = new WalletEntity(currentUserId);
+
+        when(walletService.createWallet(currentUserId)).thenReturn(createdWallet);
+
+        mockMvc.perform(post("/api/wallets")
+                        .with(authentication(new UsernamePasswordAuthenticationToken(
+                                new CurrentUserPrincipal(currentUserId),
+                                null,
+                                java.util.Collections.emptyList()))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.userId").value(currentUserId.toString()))
+                .andExpect(jsonPath("$.currency").value("RON"))
+                .andExpect(jsonPath("$.balance").value(0.00));
+
+        verify(walletService).createWallet(currentUserId);
+    }
+
+    @Test
     void rejectsUnauthenticatedRequests() throws Exception {
         mockMvc.perform(get("/api/wallets"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/wallets"))
                 .andExpect(status().isUnauthorized());
     }
 

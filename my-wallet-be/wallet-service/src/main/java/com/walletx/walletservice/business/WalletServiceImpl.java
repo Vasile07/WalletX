@@ -19,4 +19,10 @@ public class WalletServiceImpl implements WalletService {
     public List<WalletEntity> findAllByUserId(UUID userId) {
         return walletRepository.findAllByUserId(Objects.requireNonNull(userId, "userId must not be null"));
     }
+
+    @Override
+    public WalletEntity createWallet(UUID userId) {
+        UUID resolvedUserId = Objects.requireNonNull(userId, "userId must not be null");
+        return walletRepository.save(new WalletEntity(resolvedUserId));
+    }
 }
