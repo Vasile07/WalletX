@@ -2,6 +2,7 @@ package com.walletx.userservice.business;
 
 import com.walletx.userservice.domain.UserEntity;
 import com.walletx.userservice.persistence.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,17 +14,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 @Service
+@RequiredArgsConstructor
 public class UserRegistrationServiceImpl implements UserRegistrationService {
 
     private static final int BCRYPT_MAX_PASSWORD_BYTES = 72;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    public UserRegistrationServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     @Override
     @Transactional

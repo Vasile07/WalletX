@@ -14,3 +14,9 @@ Task numbers are assigned across [changes/todo](changes/todo), [changes/active](
 - [my-wallet-be](my-wallet-be): backend implementation
 - [my-wallet-fe](my-wallet-fe): frontend implementation
 - [infra](infra): infrastructure, deployment, and environment configuration
+
+## Java Conventions
+
+- Do not use Java records. Model DTOs and other data-holder types as regular classes.
+- Use Project Lombok for repetitive getters, setters, and constructors where appropriate instead of hand-writing boilerplate.
+- Add setters only when mutability is needed. Preserve explicit constructors and methods when required by domain invariants or JPA.
