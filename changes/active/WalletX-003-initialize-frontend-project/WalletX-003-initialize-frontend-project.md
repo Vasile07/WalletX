@@ -4,7 +4,7 @@
 
 - **ID:** WalletX-003
 - **Title:** Initialize Frontend Project
-- **Status:** Todo
+- **Status:** In Progress
 - **Priority:** High
 - **Created:** 2026-10-04
 - **Updated:** 2026-10-04
@@ -32,14 +32,14 @@ Provide a runnable frontend shell with navigation and module boundaries for auth
 
 ## Acceptance Criteria
 
-- [ ] The React application starts successfully.
-- [ ] Planned module routes and shared shell structure exist.
-- [ ] Frontend setup instructions are documented.
+- [x] The React application starts successfully.
+- [x] Planned module routes and shared shell structure exist.
+- [x] Frontend setup instructions are documented.
 
 ## Implementation Tasks
 
-- [ ] Initialize the React project.
-- [ ] Add shell layout, routing, and module placeholders.
+- [x] Initialize the React project.
+- [x] Add shell layout, routing, and module placeholders.
 
 ## Dependencies
 
