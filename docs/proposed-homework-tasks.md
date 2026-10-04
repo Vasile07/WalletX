@@ -11,7 +11,7 @@ This list is a planning backlog. Individual task files should be created later u
 
 ## Backend Services
 
-5. **Create User Service** — Implement user registration, profiles, password hashing, and persistence.
+5. **Create User Service** — Implement user registration, password hashing, and persistence.
 6. **Implement Login and JWT Authentication** — Add login, token generation, token validation, and protected endpoints.
 7. **Create Wallet Service** — Implement wallet creation, ownership, RON currency, and balance retrieval.
 8. **Implement Deposit Money** — Add simulated deposits and wallet balance updates.
@@ -54,3 +54,4 @@ This list is a planning backlog. Individual task files should be created later u
 33. **Add Backend Tests** — Test authentication, authorization, wallets, deposits, and transfers.
 34. **Add Frontend Tests** — Test login, dashboard, deposits, transfers, and notifications.
 35. **Create Deployment Documentation** — Document setup, environment variables, and Docker Compose usage.
+36. **Implement User Profile Retrieval** — Expose the authenticated user's profile through `GET /users/me`.
