@@ -8,3 +8,6 @@ spring:
     hibernate:
       ddl-auto: create-drop
     database-platform: org.hibernate.dialect.H2Dialect
+walletx:
+  jwt:
+    secret: walletx-test-signing-secret-must-be-at-least-32-bytes

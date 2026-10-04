@@ -27,7 +27,9 @@ This document records the current technology decisions for WalletX so future ses
 - The initial version uses one shared PostgreSQL database. Services retain logical ownership of their domain tables and access other domains through APIs or events; separate databases are not required.
 - The frontend will be a React shell with modules for authentication, wallets, transfers, and notifications.
 - REST APIs will be protected with JWT bearer tokens.
-- Project Lombok will be used for domain classes to reduce boilerplate. Avoid generating setters by default so domain state changes remain explicit through constructors and domain methods.
+- The User Service requires `JWT_SECRET` to be configured with a signing key of at least 32 bytes; never use a committed or default signing secret.
+- Login returns an access token and token type. Do not issue a separate ID token unless WalletX adopts OpenID Connect.
+- Java DTOs and other data-holder classes must be regular classes, not Java records. Use Project Lombok for boilerplate accessors and constructors where appropriate; only add setters when mutability is needed, and preserve explicit domain invariants and JPA requirements.
 - RabbitMQ will be used for worker-style messaging, while Kafka will be used for event streaming.
 - The initial supported currency is RON only.
 - Deposits are simulated; no real banking or payment integration is required.
@@ -37,7 +39,8 @@ This document records the current technology decisions for WalletX so future ses
 ## Working Conventions
 
 - Prefer clear service boundaries over sharing business logic between services.
-- Use Lombok selectively for domain-model boilerplate; do not expose unrestricted setters by default.
+- Do not use Java records in Java source; model DTOs and data holders as classes.
+- Use Lombok for repetitive getters, setters, and constructors where appropriate rather than hand-writing boilerplate. Avoid unrestricted entity setters and preserve constructors or methods required to enforce domain invariants or JPA behavior.
 - Keep authentication and authorization checks on protected backend endpoints.
 - Validate that users can access only their own wallets and transactions.
 - Keep infrastructure configuration under `infra` and architecture documentation under `docs`.
