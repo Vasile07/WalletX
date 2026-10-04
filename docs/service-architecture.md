@@ -177,6 +177,7 @@ Gateway REST API
 These constraints are mandatory for the initial release:
 
 - All wallets use `currency = "RON"`.
+- New wallets start with a balance of `0.00 RON`.
 - All transfers are expressed in RON; no multi-currency or exchange-rate logic is included.
 - Deposits are simulated only; they represent a local wallet top-up scenario for demonstration purposes.
 - No external payment provider, bank integration, or real-money settlement flow is in scope.

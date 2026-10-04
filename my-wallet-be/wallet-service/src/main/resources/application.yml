@@ -1,6 +1,14 @@
 spring:
   application:
     name: wallet-service
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/walletx}
+    username: ${DATABASE_USERNAME:walletx}
+    password: ${DATABASE_PASSWORD:walletx}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
 server:
   port: 8082
 management:
