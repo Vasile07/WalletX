@@ -4,7 +4,7 @@
 
 - **ID:** WalletX-037
 - **Title:** Retrieve Authenticated User Wallets
-- **Status:** Todo
+- **Status:** Active
 - **Priority:** High
 - **Created:** 2026-10-04
 - **Updated:** 2026-10-04
