@@ -1,14 +1,18 @@
 package com.walletx.walletservice.controller;
 
+import com.walletx.walletservice.business.DepositResult;
 import com.walletx.walletservice.business.WalletService;
 import com.walletx.walletservice.domain.WalletEntity;
 import com.walletx.walletservice.security.CurrentUserPrincipal;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -38,6 +42,18 @@ public class WalletController {
         UUID currentUserId = resolveCurrentUserId(authentication);
         WalletEntity createdWallet = walletService.createWallet(currentUserId);
         return ResponseEntity.status(HttpStatus.CREATED).body(WalletResponse.fromEntity(createdWallet));
+    }
+
+    @PostMapping("/wallets/{walletId}/deposit")
+    public DepositResponse deposit(
+            @PathVariable UUID walletId,
+            @Valid @RequestBody DepositRequest request,
+            Authentication authentication
+    ) {
+        UUID currentUserId = resolveCurrentUserId(authentication);
+        DepositResult result = walletService.deposit(
+                currentUserId, walletId, request.getAmount(), request.getCurrency());
+        return DepositResponse.fromResult(result);
     }
 
     private UUID resolveCurrentUserId(Authentication authentication) {

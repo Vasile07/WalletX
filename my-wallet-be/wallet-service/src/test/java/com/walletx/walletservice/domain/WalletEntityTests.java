@@ -27,4 +27,5 @@ class WalletEntityTests {
     void rejectsNullOwner() {
         assertThrows(NullPointerException.class, () -> new WalletEntity(null));
     }
+
 }

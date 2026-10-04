@@ -39,4 +39,8 @@ public class WalletEntity {
         this.currency = WalletCurrency.RON;
         this.balance = new BigDecimal("0.00");
     }
+
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
+    }
 }
