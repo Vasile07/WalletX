@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:wallet-service-test;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:mem:transfer-service-test;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -11,4 +11,7 @@ spring:
 walletx:
   jwt:
     secret: walletx-test-signing-secret-must-be-at-least-32-bytes
-  internal-transfer-token: walletx-test-internal-transfer-token
+  services:
+    wallet:
+      base-url: http://localhost:8082
+      internal-transfer-token: walletx-test-internal-transfer-token

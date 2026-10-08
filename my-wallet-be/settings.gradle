@@ -1,2 +1,2 @@
 rootProject.name = 'walletx-backend'
-include 'user-service', 'wallet-service', 'transfer-service'
+include 'security-common', 'user-service', 'wallet-service', 'transfer-service'

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,4 +22,8 @@ public interface WalletRepository extends JpaRepository<WalletEntity, UUID> {
             @Param("walletId") UUID walletId,
             @Param("userId") UUID userId
     );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select wallet from WalletEntity wallet where wallet.id in :walletIds order by wallet.id")
+    List<WalletEntity> findAllByIdInForUpdate(@Param("walletIds") Collection<UUID> walletIds);
 }

@@ -75,8 +75,8 @@ The architecture follows a modular microservice model with one public API bounda
 | Frontend | user interactions, wallet UI, transfer flows, notification display | none directly | Calls gateway REST endpoints and consumes SSE notifications |
 | API Gateway | public entry point and routing | none directly | Performs authentication routing and acts as a single public API surface |
 | User Service | registration, authentication, credential validation, JWT creation, user profiles | users, credentials, auth metadata | Must not own wallet balance logic or transfer records |
-| Wallet Service | wallet lifecycle, balance tracking, simulated deposit handling | wallets, wallet transactions, balance state | Owns money movement within wallet scope; does not authorize transfers to other users |
-| Transfer Service | transfer execution, validation, status tracking, event publication | transfers, transfer status, transfer ledger | Coordinates validation and records transfer attempts, using the wallet service as the source of truth for balances |
+| Wallet Service | wallet lifecycle, balance tracking, deposits, and atomic transfer balance updates | wallets, wallet transactions, balance state | Owns wallet validation, row locking, and every wallet balance mutation |
+| Transfer Service | transfer request validation, orchestration, transfer history, event publication | transfers, transfer status, transfer ledger | Calls Wallet Service over authenticated REST; never reads or writes wallet tables |
 | Notification Service | inbox/alert generation, low-balance checks, transfer notifications | notifications, outbox/processing state | Consumes events from the broker and pushes updates to connected clients |
 | PostgreSQL | one shared database | users, wallets, transfers, and notifications | Services use logically separate tables and only their owning service writes its domain data |
 | RabbitMQ / Kafka | async messaging and event streaming | broker topics/queues | RabbitMQ is for task-oriented work; Kafka is the integration/event stream |
@@ -117,7 +117,14 @@ downstream history and notification integration.
 - Gateway to User Service for authentication and profile checks
 - Gateway to Wallet Service for wallet and balance queries
 - Gateway to Transfer Service for transfer request execution
-- Transfer Service to Wallet Service for balance validation when needed
+- Transfer Service to Wallet Service to authorize and atomically apply sender debit and receiver credit
+
+The transfer request carries the user's JWT to Wallet Service and includes a separate
+service-to-service token. Wallet Service verifies both before applying a transfer within its
+own database transaction. Transfer Service records the completed transfer after receiving
+success from Wallet Service. Since this is a synchronous call across service boundaries, wallet
+balance updates and transfer-history persistence are not one atomic transaction; idempotency and
+saga/reconciliation handling are future reliability work.
 
 #### Asynchronous messaging
 

@@ -14,4 +14,12 @@ public interface WalletService {
     WalletEntity createWallet(UUID userId);
 
     DepositResult deposit(UUID currentUserId, UUID walletId, BigDecimal amount, WalletCurrency currency);
+
+    void transfer(
+            UUID currentUserId,
+            UUID senderWalletId,
+            UUID receiverWalletId,
+            BigDecimal amount,
+            WalletCurrency currency
+    );
 }
