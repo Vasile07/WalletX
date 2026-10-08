@@ -19,3 +19,7 @@ management:
   endpoint:
     health:
       show-details: always
+walletx:
+  jwt:
+    secret: ${JWT_SECRET:}
+  internal-transfer-token: ${WALLET_INTERNAL_TRANSFER_TOKEN:}

@@ -4,7 +4,7 @@
 
 - **ID:** WalletX-039
 - **Title:** Create Transfer Endpoint
-- **Status:** Todo
+- **Status:** Active
 - **Priority:** Critical
 - **Created:** 2026-10-05
 - **Updated:** 2026-10-05
@@ -23,7 +23,8 @@ Allow an authenticated user to submit a transfer request and receive a persisted
 
 - Implement `POST /transfers` using the documented request shape.
 - Implement the core transfer flow, including the checks required to safely execute a valid transfer.
-- Debit and credit balances safely and persist a completed transfer atomically.
+- Delegate wallet validation and atomic debit/credit to the Wallet Service over authenticated REST.
+- Persist a completed transfer in Transfer Service after Wallet Service confirms success.
 - Add focused tests for successful transfers and failure/rollback scenarios.
 
 ### Out of scope
@@ -36,7 +37,7 @@ Allow an authenticated user to submit a transfer request and receive a persisted
 
 - [ ] A valid request debits the sender and credits the receiver.
 - [ ] A completed transfer is persisted with amount, currency, wallets, and timestamp.
-- [ ] Failed operations do not leave partial balance updates.
+- [ ] Wallet Service balance updates are atomic; rejected wallet operations leave both balances unchanged.
 - [ ] Invalid amounts, non-RON currencies, unauthorized wallets, and insufficient balances are rejected.
 
 ## Implementation Tasks
@@ -53,4 +54,6 @@ Allow an authenticated user to submit a transfer request and receive a persisted
 ## Notes
 
 Use the documented request fields `senderWalletId`, `receiverWalletId`, `amount`, and `currency`.
+Transfer Service forwards the verified user's JWT and a separate internal service token to Wallet Service.
+Wallet balances and transfer history are persisted by separate services, so a failure between wallet completion and history persistence is not globally atomic. A saga/idempotency workflow is a follow-up reliability improvement.
 WalletX-010 separately tracks additional validation hardening and duplicate-request protection.

@@ -1,4 +1,4 @@
-package com.walletx.walletservice.config;
+package com.walletx.transferservice.config;
 
 import com.walletx.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Value;

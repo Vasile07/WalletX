@@ -5,6 +5,7 @@ import com.walletx.walletservice.business.WalletService;
 import com.walletx.walletservice.domain.WalletEntity;
 import com.walletx.walletservice.security.CurrentUserPrincipal;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -13,9 +14,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,9 +28,14 @@ import java.util.UUID;
 public class WalletController {
 
     private final WalletService walletService;
+    private final String internalTransferToken;
 
-    public WalletController(WalletService walletService) {
+    public WalletController(
+            WalletService walletService,
+            @Value("${walletx.internal-transfer-token:}") String internalTransferToken
+    ) {
         this.walletService = walletService;
+        this.internalTransferToken = internalTransferToken;
     }
 
     @GetMapping("/wallets")
@@ -54,6 +63,33 @@ public class WalletController {
         DepositResult result = walletService.deposit(
                 currentUserId, walletId, request.getAmount(), request.getCurrency());
         return DepositResponse.fromResult(result);
+    }
+
+    @PostMapping("/internal/transfers")
+    public ResponseEntity<Void> transfer(
+            @Valid @RequestBody WalletTransferRequest request,
+            Authentication authentication,
+            @RequestHeader("X-Internal-Transfer-Token") String serviceToken
+    ) {
+        verifyInternalTransferToken(serviceToken);
+        walletService.transfer(
+                resolveCurrentUserId(authentication),
+                request.getSenderWalletId(),
+                request.getReceiverWalletId(),
+                request.getAmount(),
+                request.getCurrency()
+        );
+        return ResponseEntity.noContent().build();
+    }
+
+    private void verifyInternalTransferToken(String suppliedToken) {
+        if (internalTransferToken.isBlank()
+                || !MessageDigest.isEqual(
+                internalTransferToken.getBytes(StandardCharsets.UTF_8),
+                suppliedToken.getBytes(StandardCharsets.UTF_8))) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid internal service token");
+        }
     }
 
     private UUID resolveCurrentUserId(Authentication authentication) {

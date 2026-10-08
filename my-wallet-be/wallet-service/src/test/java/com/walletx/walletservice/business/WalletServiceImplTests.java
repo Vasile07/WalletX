@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class WalletServiceImplTests {
@@ -133,6 +134,60 @@ class WalletServiceImplTests {
                 () -> walletService.deposit(userId, wallet.getId(), BigDecimal.ONE, WalletCurrency.RON));
 
         verify(depositRepository, never()).save(any(DepositEntity.class));
+        verify(walletRepository, never()).save(any(WalletEntity.class));
+    }
+
+    @Test
+    void debitsAndCreditsWalletsWhenAuthenticatedOwnerTransfersFunds() {
+        UUID userId = UUID.randomUUID();
+        WalletEntity sender = new WalletEntity(userId);
+        WalletEntity receiver = new WalletEntity(UUID.randomUUID());
+        sender.setBalance(new BigDecimal("40.00"));
+        receiver.setBalance(new BigDecimal("12.00"));
+        when(walletRepository.findAllByIdInForUpdate(
+                java.util.List.of(sender.getId(), receiver.getId())))
+                .thenReturn(java.util.List.of(sender, receiver));
+
+        walletService.transfer(userId, sender.getId(), receiver.getId(),
+                new BigDecimal("10.50"), WalletCurrency.RON);
+
+        assertEquals(new BigDecimal("29.50"), sender.getBalance());
+        assertEquals(new BigDecimal("22.50"), receiver.getBalance());
+        verify(walletRepository).save(sender);
+        verify(walletRepository).save(receiver);
+    }
+
+    @Test
+    void rejectsTransferFromWalletNotOwnedByCurrentUser() {
+        UUID userId = UUID.randomUUID();
+        WalletEntity sender = new WalletEntity(UUID.randomUUID());
+        WalletEntity receiver = new WalletEntity(UUID.randomUUID());
+        when(walletRepository.findAllByIdInForUpdate(
+                java.util.List.of(sender.getId(), receiver.getId())))
+                .thenReturn(java.util.List.of(sender, receiver));
+
+        assertThrows(AccessDeniedException.class, () -> walletService.transfer(
+                userId, sender.getId(), receiver.getId(), new BigDecimal("10.00"), WalletCurrency.RON));
+
+        verify(walletRepository, never()).save(any(WalletEntity.class));
+    }
+
+    @Test
+    void rejectsInsufficientBalanceWithoutChangingWallets() {
+        UUID userId = UUID.randomUUID();
+        WalletEntity sender = new WalletEntity(userId);
+        WalletEntity receiver = new WalletEntity(UUID.randomUUID());
+        sender.setBalance(new BigDecimal("5.00"));
+        receiver.setBalance(new BigDecimal("1.00"));
+        when(walletRepository.findAllByIdInForUpdate(
+                java.util.List.of(sender.getId(), receiver.getId())))
+                .thenReturn(java.util.List.of(sender, receiver));
+
+        assertThrows(InsufficientWalletFundsException.class, () -> walletService.transfer(
+                userId, sender.getId(), receiver.getId(), new BigDecimal("10.00"), WalletCurrency.RON));
+
+        assertEquals(new BigDecimal("5.00"), sender.getBalance());
+        assertEquals(new BigDecimal("1.00"), receiver.getBalance());
         verify(walletRepository, never()).save(any(WalletEntity.class));
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.TestPropertySource;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +32,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(WalletController.class)
 @Import(SecurityConfig.class)
+@TestPropertySource(properties = {
+        "walletx.jwt.secret=walletx-test-signing-secret-must-be-at-least-32-bytes",
+        "walletx.internal-transfer-token=walletx-test-internal-transfer-token"
+})
 class WalletControllerTests {
 
     @Autowired
@@ -138,6 +143,51 @@ class WalletControllerTests {
                 .andExpect(jsonPath("$.completedAt").value("2026-10-04T12:00:00Z"));
 
         verify(walletService).deposit(userId, walletId, new BigDecimal("12.50"), WalletCurrency.RON);
+    }
+
+    @Test
+    void executesInternalTransferOnlyWithServiceTokenAndAuthenticatedOwner() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID senderWalletId = UUID.randomUUID();
+        UUID receiverWalletId = UUID.randomUUID();
+
+        mockMvc.perform(post("/api/internal/transfers")
+                        .with(authentication(new UsernamePasswordAuthenticationToken(
+                                userId, null, java.util.Collections.emptyList())))
+                        .header("X-Internal-Transfer-Token", "walletx-test-internal-transfer-token")
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "senderWalletId": "%s",
+                                  "receiverWalletId": "%s",
+                                  "amount": 12.50,
+                                  "currency": "RON"
+                                }
+                                """.formatted(senderWalletId, receiverWalletId)))
+                .andExpect(status().isNoContent());
+
+        verify(walletService).transfer(
+                userId, senderWalletId, receiverWalletId, new BigDecimal("12.50"), WalletCurrency.RON);
+    }
+
+    @Test
+    void rejectsInternalTransferWithIncorrectServiceToken() throws Exception {
+        UUID userId = UUID.randomUUID();
+
+        mockMvc.perform(post("/api/internal/transfers")
+                        .with(authentication(new UsernamePasswordAuthenticationToken(
+                                userId, null, java.util.Collections.emptyList())))
+                        .header("X-Internal-Transfer-Token", "incorrect-token")
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "senderWalletId": "%s",
+                                  "receiverWalletId": "%s",
+                                  "amount": 12.50,
+                                  "currency": "RON"
+                                }
+                                """.formatted(UUID.randomUUID(), UUID.randomUUID())))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
