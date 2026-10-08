@@ -1,6 +1,7 @@
 package com.walletx.transferservice.business;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 public interface WalletTransferClient {
@@ -12,4 +13,6 @@ public interface WalletTransferClient {
             String currency,
             String authorizationHeader
     );
+
+    List<UUID> findWalletIdsForUser(UUID userId, String authorizationHeader);
 }

@@ -54,6 +54,26 @@ public class TransferServiceImpl implements TransferService {
         return transferRepository.findAll();
     }
 
+    @Override
+    public List<Transfer> findTransfersForUser(UUID currentUserId, String authorizationHeader) {
+        if (currentUserId == null) {
+            throw new AccessDeniedException("Authentication required");
+        }
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new AccessDeniedException("Authentication required");
+        }
+
+        List<UUID> walletIds = walletTransferClient.findWalletIdsForUser(currentUserId, authorizationHeader);
+        if (walletIds == null || walletIds.isEmpty()) {
+            return List.of();
+        }
+
+        return transferRepository.findAllBySenderWalletIdInOrReceiverWalletIdInOrderByCompletedAtDesc(
+                walletIds,
+                walletIds
+        );
+    }
+
     private void validateTransfer(UUID senderWalletId, UUID receiverWalletId, BigDecimal amount, String currency) {
         if (currency == null || !"RON".equalsIgnoreCase(currency)) {
             throw new InvalidTransferException("currency must be RON");

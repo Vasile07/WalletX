@@ -11,6 +11,9 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Component
@@ -72,4 +75,53 @@ public class RestWalletTransferClient implements WalletTransferClient {
         }
     }
 
+    @Override
+    public List<UUID> findWalletIdsForUser(UUID userId, String authorizationHeader) {
+        if (userId == null) {
+            throw new AccessDeniedException("Authentication required");
+        }
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new AccessDeniedException("Authentication required");
+        }
+
+        try {
+            WalletListEntry[] wallets = restClient.get()
+                    .uri("/api/wallets")
+                    .header(HttpHeaders.AUTHORIZATION, authorizationHeader)
+                    .retrieve()
+                    .body(WalletListEntry[].class);
+
+            if (wallets == null || wallets.length == 0) {
+                return List.of();
+            }
+
+            return Arrays.stream(wallets)
+                    .filter(Objects::nonNull)
+                    .map(WalletListEntry::getId)
+                    .filter(Objects::nonNull)
+                    .toList();
+        } catch (HttpClientErrorException.Forbidden exception) {
+            throw new AccessDeniedException("Authentication required");
+        } catch (HttpClientErrorException.Unauthorized exception) {
+            throw new AccessDeniedException("Authentication required");
+        } catch (ResourceAccessException exception) {
+            throw new WalletServiceUnavailableException("Wallet Service could not be reached", exception);
+        } catch (RestClientResponseException exception) {
+            throw new WalletServiceUnavailableException(
+                    "Wallet Service returned HTTP " + exception.getStatusCode().value(), exception);
+        }
+    }
+
+    private static final class WalletListEntry {
+        private UUID id;
+
+        public UUID getId() {
+            return id;
+        }
+
+        public void setId(UUID id) {
+            this.id = id;
+        }
+    }
 }
+

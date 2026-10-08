@@ -13,6 +13,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -72,6 +74,36 @@ class TransferServiceImplTests {
         assertThrows(InsufficientFundsException.class, () -> transferService.createTransfer(
                 request(senderWalletId, receiverWalletId, "10.00", "RON"), AUTHORIZATION_HEADER));
         assertEquals(0, transferRepository.count());
+    }
+
+    @Test
+    void returnsOnlyTransfersForAuthenticatedUserWallets() {
+        UUID userId = UUID.randomUUID();
+        UUID ownedWalletId = UUID.randomUUID();
+        UUID otherUserWalletId = UUID.randomUUID();
+        UUID unrelatedWalletId = UUID.randomUUID();
+
+        when(walletTransferClient.findWalletIdsForUser(userId, AUTHORIZATION_HEADER))
+                .thenReturn(List.of(ownedWalletId));
+
+        transferRepository.save(new Transfer(ownedWalletId, otherUserWalletId, new BigDecimal("5.00"), "RON"));
+        transferRepository.save(new Transfer(unrelatedWalletId, UUID.randomUUID(), new BigDecimal("7.50"), "RON"));
+
+        List<Transfer> transfers = transferService.findTransfersForUser(userId, AUTHORIZATION_HEADER);
+
+        assertEquals(1, transfers.size());
+        assertEquals(ownedWalletId, transfers.get(0).getSenderWalletId());
+        assertEquals(otherUserWalletId, transfers.get(0).getReceiverWalletId());
+    }
+
+    @Test
+    void returnsEmptyHistoryWhenUserHasNoWallets() {
+        UUID userId = UUID.randomUUID();
+        when(walletTransferClient.findWalletIdsForUser(userId, AUTHORIZATION_HEADER)).thenReturn(List.of());
+
+        List<Transfer> transfers = transferService.findTransfersForUser(userId, AUTHORIZATION_HEADER);
+
+        assertEquals(List.of(), transfers);
     }
 
     @Test
