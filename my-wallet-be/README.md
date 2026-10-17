@@ -6,6 +6,7 @@ This backend workspace contains the Spring Boot services and shared security lib
 - `user-service`
 - `wallet-service`
 - `transfer-service`
+- `api-gateway`
 - `security-common` (shared JWT authentication filter)
 
 ## Module structure
@@ -22,6 +23,7 @@ From the repository root:
 ```bash
 cd my-wallet-be
 ./gradlew build
+./gradlew :api-gateway:bootRun
 ./gradlew :user-service:bootRun
 ./gradlew :wallet-service:bootRun
 ./gradlew :transfer-service:bootRun

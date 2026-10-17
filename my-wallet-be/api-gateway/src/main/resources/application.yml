@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: api-gateway
+  main:
+    web-application-type: reactive
+server:
+  port: ${GATEWAY_PORT:8080}
+walletx:
+  jwt:
+    secret: ${JWT_SECRET:}
+  services:
+    user:
+      base-url: ${USER_SERVICE_URL:http://localhost:8081}
+    wallet:
+      base-url: ${WALLET_SERVICE_URL:http://localhost:8082}
+    transfer:
+      base-url: ${TRANSFER_SERVICE_URL:http://localhost:8083}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
