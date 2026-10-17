@@ -28,4 +28,6 @@ public class TransferRequest {
 
     @NotNull(message = "currency must not be null")
     private String currency;
+
+    private String idempotencyKey;
 }

@@ -3,11 +3,15 @@ package com.walletx.transferservice.business;
 import com.walletx.transferservice.controller.TransferRequest;
 import com.walletx.transferservice.domain.Transfer;
 import com.walletx.transferservice.persistence.TransferRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -25,6 +29,7 @@ public class TransferServiceImpl implements TransferService {
     }
 
     @Override
+    @Transactional
     public Transfer createTransfer(TransferRequest request, String authorizationHeader) {
         if (request == null) {
             throw new InvalidTransferException("request must not be null");
@@ -43,10 +48,14 @@ public class TransferServiceImpl implements TransferService {
 
         validateTransfer(senderWalletId, receiverWalletId, rawAmount, currency);
         BigDecimal amount = normalizeAmount(rawAmount);
-        walletTransferClient.executeTransfer(
-                senderWalletId, receiverWalletId, amount, currency, authorizationHeader);
-        Transfer transfer = new Transfer(senderWalletId, receiverWalletId, amount, currency);
-        return transferRepository.save(transfer);
+        String idempotencyKey = normalizeIdempotencyKey(request.getIdempotencyKey());
+
+        if (idempotencyKey != null) {
+            return transferRepository.findByIdempotencyKey(idempotencyKey)
+                    .orElseGet(() -> invokeWalletTransferAndPersist(senderWalletId, receiverWalletId, amount, currency, idempotencyKey, authorizationHeader));
+        }
+
+        return invokeWalletTransferAndPersist(senderWalletId, receiverWalletId, amount, currency, null, authorizationHeader);
     }
 
     @Override
@@ -98,11 +107,40 @@ public class TransferServiceImpl implements TransferService {
         }
     }
 
+    private Transfer invokeWalletTransferAndPersist(
+            UUID senderWalletId,
+            UUID receiverWalletId,
+            BigDecimal amount,
+            String currency,
+            String idempotencyKey,
+            String authorizationHeader
+    ) {
+        walletTransferClient.executeTransfer(senderWalletId, receiverWalletId, amount, currency, authorizationHeader);
+        Transfer transfer = new Transfer(senderWalletId, receiverWalletId, amount, currency, idempotencyKey);
+        try {
+            return transferRepository.saveAndFlush(transfer);
+        } catch (DataIntegrityViolationException exception) {
+            if (idempotencyKey == null) {
+                throw exception;
+            }
+            return transferRepository.findByIdempotencyKey(idempotencyKey)
+                    .orElseThrow(() -> exception);
+        }
+    }
+
     private String normalizeCurrency(String currency) {
-        return currency == null ? null : currency.trim().toUpperCase();
+        return currency == null ? null : currency.trim().toUpperCase(Locale.ROOT);
     }
 
     private BigDecimal normalizeAmount(BigDecimal amount) {
-        return amount.setScale(2);
+        return amount.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private String normalizeIdempotencyKey(String idempotencyKey) {
+        if (idempotencyKey == null) {
+            return null;
+        }
+        String normalized = idempotencyKey.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 }
