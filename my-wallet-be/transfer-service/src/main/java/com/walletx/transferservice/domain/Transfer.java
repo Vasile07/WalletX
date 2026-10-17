@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -12,7 +13,13 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-@Table(name = "transfers")
+@Table(
+        name = "transfers",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_transfers_idempotency_key",
+                columnNames = "idempotency_key"
+        )
+)
 @Getter
 public class Transfer {
 
@@ -31,18 +38,22 @@ public class Transfer {
     @Column(nullable = false, length = 3)
     private String currency;
 
+    @Column(name = "idempotency_key", length = 64)
+    private String idempotencyKey;
+
     @Column(name = "completed_at", nullable = false)
     private Instant completedAt;
 
     protected Transfer() {
     }
 
-    public Transfer(UUID senderWalletId, UUID receiverWalletId, BigDecimal amount, String currency) {
+    public Transfer(UUID senderWalletId, UUID receiverWalletId, BigDecimal amount, String currency, String idempotencyKey) {
         this.id = UUID.randomUUID();
         this.senderWalletId = Objects.requireNonNull(senderWalletId, "senderWalletId must not be null");
         this.receiverWalletId = Objects.requireNonNull(receiverWalletId, "receiverWalletId must not be null");
         this.amount = Objects.requireNonNull(amount, "amount must not be null");
         this.currency = Objects.requireNonNull(currency, "currency must not be null");
+        this.idempotencyKey = idempotencyKey == null || idempotencyKey.isBlank() ? null : idempotencyKey.trim();
         this.completedAt = Instant.now();
     }
 }

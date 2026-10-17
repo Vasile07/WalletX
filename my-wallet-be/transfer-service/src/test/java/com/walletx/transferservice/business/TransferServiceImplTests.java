@@ -86,14 +86,49 @@ class TransferServiceImplTests {
         when(walletTransferClient.findWalletIdsForUser(userId, AUTHORIZATION_HEADER))
                 .thenReturn(List.of(ownedWalletId));
 
-        transferRepository.save(new Transfer(ownedWalletId, otherUserWalletId, new BigDecimal("5.00"), "RON"));
-        transferRepository.save(new Transfer(unrelatedWalletId, UUID.randomUUID(), new BigDecimal("7.50"), "RON"));
+        transferRepository.save(new Transfer(ownedWalletId, otherUserWalletId, new BigDecimal("5.00"), "RON", "fingerprint-1"));
+        transferRepository.save(new Transfer(unrelatedWalletId, UUID.randomUUID(), new BigDecimal("7.50"), "RON", "fingerprint-2"));
 
         List<Transfer> transfers = transferService.findTransfersForUser(userId, AUTHORIZATION_HEADER);
 
         assertEquals(1, transfers.size());
         assertEquals(ownedWalletId, transfers.get(0).getSenderWalletId());
         assertEquals(otherUserWalletId, transfers.get(0).getReceiverWalletId());
+    }
+
+    @Test
+    void retriesDuplicateTransferRequestWithoutCreatingAnotherCompletedTransfer() {
+        UUID senderWalletId = UUID.randomUUID();
+        UUID receiverWalletId = UUID.randomUUID();
+        TransferRequest request = request(senderWalletId, receiverWalletId, "15.50", "RON");
+        request.setIdempotencyKey("same-idempotency-key");
+
+        Transfer first = transferService.createTransfer(request, AUTHORIZATION_HEADER);
+        Transfer second = transferService.createTransfer(request, AUTHORIZATION_HEADER);
+
+        assertEquals(first.getId(), second.getId());
+        assertEquals(1, transferRepository.count());
+        verify(walletTransferClient).executeTransfer(
+                senderWalletId, receiverWalletId, new BigDecimal("15.50"), "RON", AUTHORIZATION_HEADER);
+    }
+
+    @Test
+    void allowsSameTransferPairOnDifferentRequestsWhenIdempotencyKeysDiffer() {
+        UUID senderWalletId = UUID.randomUUID();
+        UUID receiverWalletId = UUID.randomUUID();
+
+        TransferRequest firstRequest = request(senderWalletId, receiverWalletId, "15.50", "RON");
+        firstRequest.setIdempotencyKey("request-1");
+        TransferRequest secondRequest = request(senderWalletId, receiverWalletId, "15.50", "RON");
+        secondRequest.setIdempotencyKey("request-2");
+
+        Transfer first = transferService.createTransfer(firstRequest, AUTHORIZATION_HEADER);
+        Transfer second = transferService.createTransfer(secondRequest, AUTHORIZATION_HEADER);
+
+        assertEquals(2, transferRepository.count());
+        assertEquals(first.getAmount(), second.getAmount());
+        assertEquals(senderWalletId, first.getSenderWalletId());
+        assertEquals(senderWalletId, second.getSenderWalletId());
     }
 
     @Test
@@ -118,7 +153,7 @@ class TransferServiceImplTests {
         UUID senderWalletId = UUID.randomUUID();
         UUID receiverWalletId = UUID.randomUUID();
         doThrow(new DataIntegrityViolationException("simulated persistence failure"))
-                .when(transferRepository).save(any(Transfer.class));
+                .when(transferRepository).saveAndFlush(any(Transfer.class));
 
         assertThrows(DataIntegrityViolationException.class, () -> transferService.createTransfer(
                 request(senderWalletId, receiverWalletId, "5.00", "RON"), AUTHORIZATION_HEADER));
