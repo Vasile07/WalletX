@@ -2,9 +2,12 @@ package com.walletx.transferservice.business;
 
 import com.walletx.transferservice.controller.TransferRequest;
 import com.walletx.transferservice.domain.Transfer;
+import com.walletx.transferservice.messaging.TransferMessage;
+import com.walletx.transferservice.messaging.TransferRabbitConfig;
 import com.walletx.transferservice.persistence.TransferRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -20,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -38,6 +42,9 @@ class TransferServiceImplTests {
 
     @MockBean
     private WalletTransferClient walletTransferClient;
+
+    @MockBean
+    private RabbitTemplate rabbitTemplate;
 
     @BeforeEach
     void setUp() {
@@ -61,6 +68,10 @@ class TransferServiceImplTests {
         assertEquals(1, transferRepository.count());
         verify(walletTransferClient).executeTransfer(
                 senderWalletId, receiverWalletId, new BigDecimal("15.50"), "RON", AUTHORIZATION_HEADER);
+        verify(rabbitTemplate).convertAndSend(
+                eq(TransferRabbitConfig.TRANSFER_EXCHANGE),
+                eq(TransferRabbitConfig.TRANSFER_ROUTING_KEY),
+                any(TransferMessage.class));
     }
 
     @Test

@@ -42,4 +42,6 @@ Set `JWT_SECRET` to the same secret (at least 32 bytes) for the User, Wallet, an
 
 The Wallet Service owns wallet records and atomically applies the debit and credit in its own database transaction. The Transfer Service records history after Wallet Service confirms success. These operations span two services and are not one distributed transaction; a failure after the wallet update but before transfer-history persistence can leave the balances changed without a history row. A later idempotency/outbox or saga step is needed to close that failure window.
 
+RabbitMQ is used for transfer completion work items. Start the broker locally from the repository root with `docker compose -f infra/docker-compose.yml up -d rabbitmq`, then configure `RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD`, and `RABBITMQ_AUTO_STARTUP` as needed. The Transfer Service publishes transfer-completion messages to the `walletx.transfer.exchange` exchange on the `transfer.completed` routing key and consumes them from the `walletx.transfer.completed.queue` with retry and dead-letter queues.
+
 The services do not require banking integrations or production infrastructure.
