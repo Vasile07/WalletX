@@ -4,10 +4,10 @@
 
 - **ID:** WalletX-013
 - **Title:** Configure RabbitMQ
-- **Status:** Todo
+- **Status:** Active
 - **Priority:** High
 - **Created:** 2026-10-04
-- **Updated:** 2026-10-04
+- **Updated:** 2026-11-09
 
 ## Description
 

@@ -2,7 +2,11 @@ package com.walletx.transferservice.business;
 
 import com.walletx.transferservice.controller.TransferRequest;
 import com.walletx.transferservice.domain.Transfer;
+import com.walletx.transferservice.messaging.TransferMessagePublisher;
 import com.walletx.transferservice.persistence.TransferRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.AmqpException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -17,15 +21,20 @@ import java.util.UUID;
 @Service
 public class TransferServiceImpl implements TransferService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TransferServiceImpl.class);
+
     private final TransferRepository transferRepository;
     private final WalletTransferClient walletTransferClient;
+    private final TransferMessagePublisher transferMessagePublisher;
 
     public TransferServiceImpl(
             TransferRepository transferRepository,
-            WalletTransferClient walletTransferClient
+            WalletTransferClient walletTransferClient,
+            TransferMessagePublisher transferMessagePublisher
     ) {
         this.transferRepository = transferRepository;
         this.walletTransferClient = walletTransferClient;
+        this.transferMessagePublisher = transferMessagePublisher;
     }
 
     @Override
@@ -118,7 +127,13 @@ public class TransferServiceImpl implements TransferService {
         walletTransferClient.executeTransfer(senderWalletId, receiverWalletId, amount, currency, authorizationHeader);
         Transfer transfer = new Transfer(senderWalletId, receiverWalletId, amount, currency, idempotencyKey);
         try {
-            return transferRepository.saveAndFlush(transfer);
+            Transfer savedTransfer = transferRepository.saveAndFlush(transfer);
+            try {
+                transferMessagePublisher.publishTransferCompleted(savedTransfer);
+            } catch (AmqpException exception) {
+                LOGGER.warn("Transfer {} was recorded but could not be published to RabbitMQ", savedTransfer.getId(), exception);
+            }
+            return savedTransfer;
         } catch (DataIntegrityViolationException exception) {
             if (idempotencyKey == null) {
                 throw exception;
