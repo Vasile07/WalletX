@@ -1,6 +1,7 @@
 package com.walletx.transferservice.controller;
 
 import com.walletx.transferservice.business.TransferService;
+import com.walletx.transferservice.business.WalletTransferClient;
 import com.walletx.transferservice.domain.Transfer;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
@@ -23,9 +24,11 @@ import java.util.UUID;
 public class TransferController {
 
     private final TransferService transferService;
+    private final WalletTransferClient walletTransferClient;
 
-    public TransferController(TransferService transferService) {
+    public TransferController(TransferService transferService, WalletTransferClient walletTransferClient) {
         this.transferService = transferService;
+        this.walletTransferClient = walletTransferClient;
     }
 
     @GetMapping("/transfers")
@@ -34,18 +37,23 @@ public class TransferController {
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader
     ) {
         UUID currentUserId = resolveCurrentUserId(authentication);
+        List<UUID> ownedWalletIds = walletTransferClient.findWalletIdsForUser(currentUserId, authorizationHeader);
         return transferService.findTransfersForUser(currentUserId, authorizationHeader).stream()
-                .map(TransferResponse::fromDomain)
+                .map(transfer -> TransferResponse.fromDomain(transfer, currentUserId, ownedWalletIds))
                 .toList();
     }
 
     @PostMapping("/transfers")
     public ResponseEntity<TransferResponse> createTransfer(
             @Valid @RequestBody TransferRequest request,
+            Authentication authentication,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader
     ) {
+        UUID currentUserId = resolveCurrentUserId(authentication);
+        List<UUID> ownedWalletIds = walletTransferClient.findWalletIdsForUser(currentUserId, authorizationHeader);
         Transfer createdTransfer = transferService.createTransfer(request, authorizationHeader);
-        return ResponseEntity.status(HttpStatus.CREATED).body(TransferResponse.fromDomain(createdTransfer));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(TransferResponse.fromDomain(createdTransfer, currentUserId, ownedWalletIds));
     }
 
     private UUID resolveCurrentUserId(Authentication authentication) {
