@@ -4,10 +4,10 @@
 
 - **ID:** WalletX-011
 - **Title:** Implement Transaction History
-- **Status:** Todo
+- **Status:** Done
 - **Priority:** High
 - **Created:** 2026-10-04
-- **Updated:** 2026-10-04
+- **Updated:** 2026-10-17
 
 ## Description
 
