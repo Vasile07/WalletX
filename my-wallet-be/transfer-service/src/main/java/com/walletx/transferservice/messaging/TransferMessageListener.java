@@ -12,17 +12,17 @@ public class TransferMessageListener {
 
     @RabbitListener(queues = TransferRabbitConfig.TRANSFER_COMPLETED_QUEUE)
     public void onTransferCompleted(TransferMessage message) {
-        if (message == null || message.transferId() == null || message.amount() == null || message.currency() == null) {
+        if (message == null || message.getTransferId() == null || message.getAmount() == null || message.getCurrency() == null) {
             throw new IllegalArgumentException("Invalid transfer completion message");
         }
 
         LOGGER.info(
                 "Transfer {} completed for wallet {} to wallet {} with amount {} {}",
-                message.transferId(),
-                message.senderWalletId(),
-                message.receiverWalletId(),
-                message.amount(),
-                message.currency()
+                message.getTransferId(),
+                message.getSenderWalletId(),
+                message.getReceiverWalletId(),
+                message.getAmount(),
+                message.getCurrency()
         );
     }
 }
