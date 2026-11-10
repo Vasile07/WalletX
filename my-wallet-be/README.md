@@ -44,4 +44,6 @@ The Wallet Service owns wallet records and atomically applies the debit and cred
 
 RabbitMQ is used for transfer completion work items. Start the broker locally from the repository root with `docker compose -f infra/docker-compose.yml up -d rabbitmq`, then configure `RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD`, and `RABBITMQ_AUTO_STARTUP` as needed. The Transfer Service publishes transfer-completion messages to the `walletx.transfer.exchange` exchange on the `transfer.completed` routing key and consumes them from the `walletx.transfer.completed.queue` with retry and dead-letter queues.
 
+Kafka is used for event streaming. Start the broker locally with `docker compose -f infra/docker-compose.yml up -d kafka`, then configure `KAFKA_BOOTSTRAP_SERVERS` (default `localhost:9092`) and optionally `KAFKA_CONSUMER_GROUP` for the audit consumer. The Transfer Service emits versioned `transfer.completed` events to the `money-transfers` topic. The built-in `TransferEventConsumer` logs each event to provide a basic consumer verification path for independent downstream consumers.
+
 The services do not require banking integrations or production infrastructure.

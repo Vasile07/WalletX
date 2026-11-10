@@ -18,6 +18,22 @@ spring:
       simple:
         auto-startup: ${RABBITMQ_AUTO_STARTUP:true}
         default-requeue-rejected: false
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      enable-idempotence: true
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP:walletx-transfer-audit}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.walletx.transferservice.messaging
+        spring.json.value.default.type: com.walletx.transferservice.messaging.TransferKafkaMessage
 walletx:
   jwt:
     secret: ${JWT_SECRET:}

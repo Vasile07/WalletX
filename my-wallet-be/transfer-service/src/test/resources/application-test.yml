@@ -12,6 +12,12 @@ spring:
     listener:
       simple:
         auto-startup: false
+  kafka:
+    bootstrap-servers: localhost:9092
+    admin:
+      fail-fast: false
+    listener:
+      auto-startup: false
 walletx:
   jwt:
     secret: walletx-test-signing-secret-must-be-at-least-32-bytes

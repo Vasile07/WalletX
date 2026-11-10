@@ -2,6 +2,7 @@ package com.walletx.transferservice.business;
 
 import com.walletx.transferservice.controller.TransferRequest;
 import com.walletx.transferservice.domain.Transfer;
+import com.walletx.transferservice.messaging.TransferKafkaPublisher;
 import com.walletx.transferservice.messaging.TransferMessagePublisher;
 import com.walletx.transferservice.persistence.TransferRepository;
 import org.slf4j.Logger;
@@ -26,15 +27,18 @@ public class TransferServiceImpl implements TransferService {
     private final TransferRepository transferRepository;
     private final WalletTransferClient walletTransferClient;
     private final TransferMessagePublisher transferMessagePublisher;
+    private final TransferKafkaPublisher transferKafkaPublisher;
 
     public TransferServiceImpl(
             TransferRepository transferRepository,
             WalletTransferClient walletTransferClient,
-            TransferMessagePublisher transferMessagePublisher
+            TransferMessagePublisher transferMessagePublisher,
+            TransferKafkaPublisher transferKafkaPublisher
     ) {
         this.transferRepository = transferRepository;
         this.walletTransferClient = walletTransferClient;
         this.transferMessagePublisher = transferMessagePublisher;
+        this.transferKafkaPublisher = transferKafkaPublisher;
     }
 
     @Override
@@ -132,6 +136,11 @@ public class TransferServiceImpl implements TransferService {
                 transferMessagePublisher.publishTransferCompleted(savedTransfer);
             } catch (AmqpException exception) {
                 LOGGER.warn("Transfer {} was recorded but could not be published to RabbitMQ", savedTransfer.getId(), exception);
+            }
+            try {
+                transferKafkaPublisher.publishTransferCompleted(savedTransfer);
+            } catch (RuntimeException exception) {
+                LOGGER.error("Transfer {} was recorded but could not be published to Kafka", savedTransfer.getId(), exception);
             }
             return savedTransfer;
         } catch (DataIntegrityViolationException exception) {
