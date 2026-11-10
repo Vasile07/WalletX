@@ -29,14 +29,16 @@ VITE_API_BASE_URL=http://localhost:8080/api
 ## Project structure
 
 - `src/components/AppShell.jsx` contains the shared sidebar layout and routing shell.
-- `src/modules/*` stores module-specific placeholder pages for each feature area.
+- `src/modules/auth` contains the authentication module.
+- `src/modules/wallets` contains the wallet management module with wallet listing, balance curation, and simulated deposit actions.
+- `src/modules/*` stores module-specific pages for each feature area.
 - `src/api/client.js` defines the shared API conventions and request helper.
 - `src/state/appState.js` defines the app state context used by the shell and modules.
 
 ## Available routes
 
 - `/auth` – authentication shell and session status placeholder
-- `/wallets` – wallet management module placeholder
+- `/wallets` – wallet management workflow with wallet creation and simulated deposits
 - `/transfers` – transfer workflow placeholder
 - `/notifications` – notification feed placeholder
 
