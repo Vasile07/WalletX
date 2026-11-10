@@ -1,4 +1,5 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { ProtectedRoute } from './ProtectedRoute'
 import { AuthPage } from '../modules/auth/pages/AuthPage'
 import { WalletsPage } from '../modules/wallets/pages/WalletsPage'
 import { TransfersPage } from '../modules/transfers/pages/TransfersPage'
@@ -13,7 +14,7 @@ const navItems = [
 ]
 
 export function AppShell() {
-  const { isAuthenticated, setIsAuthenticated } = useAppState()
+  const { isAuthenticated, logout } = useAppState()
 
   return (
     <div className="app-shell">
@@ -40,20 +41,31 @@ export function AppShell() {
 
         <div className="sidebar-footer">
           <div className="status-pill">{isAuthenticated ? 'Signed in' : 'Demo mode'}</div>
-          <button type="button" className="ghost-button" onClick={() => setIsAuthenticated((value) => !value)}>
-            {isAuthenticated ? 'Log out' : 'Log in'}
+          <button
+            type="button"
+            className="ghost-button"
+            onClick={() => {
+              if (isAuthenticated) {
+                logout()
+              }
+            }}
+          >
+            {isAuthenticated ? 'Log out' : 'Continue to sign in'}
           </button>
         </div>
       </aside>
 
       <main className="content-panel">
         <Routes>
-          <Route path="/" element={<Navigate to="/auth" replace />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/wallets" element={<WalletsPage />} />
-          <Route path="/transfers" element={<TransfersPage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="*" element={<Navigate to="/auth" replace />} />
+          <Route path="/" element={<Navigate to={isAuthenticated ? '/wallets' : '/auth'} replace />} />
+          <Route
+            path="/auth"
+            element={isAuthenticated ? <Navigate to="/wallets" replace /> : <AuthPage />}
+          />
+          <Route path="/wallets" element={<ProtectedRoute><WalletsPage /></ProtectedRoute>} />
+          <Route path="/transfers" element={<ProtectedRoute><TransfersPage /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to={isAuthenticated ? '/wallets' : '/auth'} replace />} />
         </Routes>
       </main>
     </div>
