@@ -46,4 +46,6 @@ RabbitMQ is used for transfer completion work items. Start the broker locally fr
 
 Kafka is used for event streaming. Start the broker locally with `docker compose -f infra/docker-compose.yml up -d kafka`, then configure `KAFKA_BOOTSTRAP_SERVERS` (default `localhost:9092`) and optionally `KAFKA_CONSUMER_GROUP` for the audit consumer. The Transfer Service emits versioned `transfer.completed` events to the `money-transfers` topic. The built-in `TransferEventConsumer` logs each event to provide a basic consumer verification path for independent downstream consumers.
 
+The API Gateway exposes an authenticated SSE endpoint at `GET /notifications` for per-user real-time updates. Clients connect with the same JWT used for the protected routes, and the stream emits event names such as `transfer_sent`, `transfer_received`, `transfer_failed`, `deposit_completed`, and `system`. Each event carries a JSON payload with the user, message, and optional wallet/transfer/deposit identifiers. The stream also sends a `connected` event at subscription time so reconnect logic can recover state cleanly.
+
 The services do not require banking integrations or production infrastructure.
