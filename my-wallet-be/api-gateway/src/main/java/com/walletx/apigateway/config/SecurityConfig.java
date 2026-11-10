@@ -33,7 +33,7 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .pathMatchers("/api/health", "/actuator/health", "/actuator/info").permitAll()
                         .pathMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
-                        .pathMatchers("/auth/**", "/users/**").authenticated()
+                        .pathMatchers("/auth/**", "/users/**", "/notifications/**").authenticated()
                         .pathMatchers("/wallets/**", "/transfers/**").authenticated()
                         .anyExchange().denyAll()
                 )
