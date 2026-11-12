@@ -4,10 +4,10 @@
 
 - **ID:** WalletX-023
 - **Title:** Create Backend Dockerfiles
-- **Status:** Todo
+- **Status:** Active
 - **Priority:** High
 - **Created:** 2026-10-04
-- **Updated:** 2026-10-04
+- **Updated:** 2026-11-12
 
 ## Description
 
@@ -38,7 +38,7 @@ Make every backend component runnable consistently in local and CI environments.
 
 ## Implementation Tasks
 
-- [ ] Create and test Dockerfiles for each backend component.
+- [x] Create and test Dockerfiles for each backend component.
 - [ ] Document build arguments and runtime environment variables.
 
 ## Dependencies
