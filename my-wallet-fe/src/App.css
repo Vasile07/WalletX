@@ -328,6 +328,44 @@
   color: #991b1b;
 }
 
+.compact-box {
+  margin-top: 0.8rem;
+}
+
+.transfer-list {
+  margin-top: 0.5rem;
+}
+
+.transfer-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: #f8fafc;
+}
+
+.transfer-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.24rem;
+}
+
+.transfer-details small {
+  color: #64748b;
+  word-break: break-all;
+}
+
+.negative-amount {
+  color: #b91c1c;
+}
+
+.positive-amount {
+  color: #166534;
+}
+
 .empty-state {
   color: #64748b;
 }
