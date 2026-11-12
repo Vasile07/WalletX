@@ -7,6 +7,7 @@ import com.walletx.walletservice.event.DepositCompletedEvent;
 import com.walletx.walletservice.persistence.DepositRepository;
 import com.walletx.walletservice.persistence.WalletRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,8 @@ public class WalletServiceImpl implements WalletService {
 
     private final WalletRepository walletRepository;
     private final DepositRepository depositRepository;
+    private final LowBalanceFunction lowBalanceFunction;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public List<WalletEntity> findAllByUserId(UUID userId) {
@@ -49,6 +52,7 @@ public class WalletServiceImpl implements WalletService {
         if (updatedBalance.precision() > 19) {
             throw new InvalidDepositException("deposit would exceed the maximum wallet balance");
         }
+        BigDecimal previousBalance = wallet.getBalance();
         wallet.setBalance(updatedBalance);
         Instant completedAt = Instant.now();
         DepositEntity deposit = depositRepository.save(new DepositEntity(
@@ -62,6 +66,13 @@ public class WalletServiceImpl implements WalletService {
                 currency,
                 completedAt
         );
+        lowBalanceFunction.evaluate(
+                resolvedUserId,
+                wallet.getId(),
+                previousBalance,
+                updatedWallet.getBalance(),
+                currency
+        ).ifPresent(eventPublisher::publishEvent);
         return new DepositResult(updatedWallet, event);
     }
 
@@ -108,10 +119,18 @@ public class WalletServiceImpl implements WalletService {
             throw new InvalidWalletTransferException("transfer would exceed the maximum wallet balance");
         }
 
+        BigDecimal previousSenderBalance = senderWallet.getBalance();
         senderWallet.setBalance(updatedSenderBalance);
         receiverWallet.setBalance(updatedReceiverBalance);
         walletRepository.save(senderWallet);
         walletRepository.save(receiverWallet);
+        lowBalanceFunction.evaluate(
+                resolvedUserId,
+                senderWallet.getId(),
+                previousSenderBalance,
+                updatedSenderBalance,
+                currency
+        ).ifPresent(eventPublisher::publishEvent);
     }
 
     private void validateDeposit(WalletEntity wallet, BigDecimal amount, WalletCurrency currency) {

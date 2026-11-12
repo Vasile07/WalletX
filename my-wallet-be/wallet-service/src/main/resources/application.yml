@@ -23,3 +23,7 @@ walletx:
   jwt:
     secret: ${JWT_SECRET:}
   internal-transfer-token: ${WALLET_INTERNAL_TRANSFER_TOKEN:}
+  low-balance-threshold: ${WALLET_LOW_BALANCE_THRESHOLD:100.00}
+  notifications:
+    gateway-url: ${NOTIFICATION_GATEWAY_URL:http://localhost:8080}
+    internal-token: ${WALLET_LOW_BALANCE_NOTIFICATION_TOKEN:}

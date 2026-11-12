@@ -4,10 +4,10 @@
 
 - **ID:** WalletX-016
 - **Title:** Implement Low-Balance Function
-- **Status:** Todo
+- **Status:** In Progress
 - **Priority:** Medium
 - **Created:** 2026-10-04
-- **Updated:** 2026-10-04
+- **Updated:** 2026-11-10
 
 ## Description
 
@@ -48,3 +48,5 @@ Demonstrate the FaaS requirement with a local Docker-based function or OpenFaaS-
 ## Notes
 
 Keep the implementation replaceable by OpenFaaS, AWS Lambda, or another provider later.
+
+This task is now active and ready for implementation. The balance update flow in the Wallet Service is the required trigger point, with the threshold defaulting to the documented 100 RON policy.
