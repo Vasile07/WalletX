@@ -173,6 +173,111 @@
   line-height: 1.6;
 }
 
+.dashboard-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashboard-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-link.secondary {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #0f172a;
+}
+
+.transaction-list,
+.notification-preview-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.transaction-item,
+.notification-preview-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}
+
+.transaction-title,
+.notification-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #075985;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.transaction-item div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.transaction-item small {
+  color: #64748b;
+  word-break: break-all;
+}
+
+.transaction-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+}
+
+.transaction-meta strong {
+  font-size: 0.96rem;
+}
+
+.transaction-meta time {
+  color: #64748b;
+  font-size: 0.76rem;
+}
+
+.positive {
+  color: #15803d;
+}
+
+.negative {
+  color: #b91c1c;
+}
+
+.notification-preview-item {
+  align-items: flex-start;
+}
+
+.notification-preview-item p {
+  margin: 0;
+  color: #334155;
+}
+
+.empty-state-copy {
+  margin: 0;
+  color: #475569;
+}
+
 .feature-list {
   margin: 0;
   padding-left: 1.1rem;
