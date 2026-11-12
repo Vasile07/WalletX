@@ -1,5 +1,6 @@
 package com.walletx.apigateway.notification;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,9 @@ public class NotificationMessage {
     private UUID walletId;
     private UUID transferId;
     private UUID depositId;
+    private String currency;
+    private BigDecimal balance;
+    private BigDecimal threshold;
     private Instant createdAt;
     private boolean connected;
 

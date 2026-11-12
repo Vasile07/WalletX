@@ -5,26 +5,26 @@ import com.walletx.walletservice.domain.WalletCurrency;
 import com.walletx.walletservice.domain.WalletEntity;
 import com.walletx.walletservice.persistence.DepositRepository;
 import com.walletx.walletservice.persistence.WalletRepository;
+import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
-
-import java.math.BigDecimal;
-import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class WalletServiceImplTests {
@@ -34,6 +34,12 @@ class WalletServiceImplTests {
 
     @Mock
     private DepositRepository depositRepository;
+
+    @Mock
+    private LowBalanceFunction lowBalanceFunction;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private WalletServiceImpl walletService;
@@ -155,6 +161,40 @@ class WalletServiceImplTests {
         assertEquals(new BigDecimal("22.50"), receiver.getBalance());
         verify(walletRepository).save(sender);
         verify(walletRepository).save(receiver);
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
+    }
+
+    @Test
+    void publishesLowBalanceEventWhenTransferCrossesThreshold() {
+        UUID userId = UUID.randomUUID();
+        WalletEntity sender = new WalletEntity(userId);
+        WalletEntity receiver = new WalletEntity(UUID.randomUUID());
+        sender.setBalance(new BigDecimal("105.00"));
+        receiver.setBalance(new BigDecimal("12.00"));
+        LowBalanceNotification notification = LowBalanceNotification.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .walletId(sender.getId())
+                .currency(WalletCurrency.RON)
+                .balance(new BigDecimal("95.00"))
+                .threshold(new BigDecimal("100.00"))
+                .message("Wallet balance is below the configured threshold")
+                .build();
+        when(walletRepository.findAllByIdInForUpdate(
+                java.util.List.of(sender.getId(), receiver.getId())))
+                .thenReturn(java.util.List.of(sender, receiver));
+        when(lowBalanceFunction.evaluate(
+                eq(userId),
+                eq(sender.getId()),
+                eq(new BigDecimal("105.00")),
+                eq(new BigDecimal("95.00")),
+                eq(WalletCurrency.RON)))
+                .thenReturn(java.util.Optional.of(notification));
+
+        walletService.transfer(userId, sender.getId(), receiver.getId(),
+                new BigDecimal("10.00"), WalletCurrency.RON);
+
+        verify(eventPublisher).publishEvent(notification);
     }
 
     @Test
