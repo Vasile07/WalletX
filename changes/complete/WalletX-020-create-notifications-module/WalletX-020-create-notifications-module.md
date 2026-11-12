@@ -4,10 +4,10 @@
 
 - **ID:** WalletX-020
 - **Title:** Create Notifications Module
-- **Status:** Todo
+- **Status:** Active
 - **Priority:** Medium
 - **Created:** 2026-10-04
-- **Updated:** 2026-10-04
+- **Updated:** 2026-11-12
 
 ## Description
 
@@ -32,14 +32,14 @@ Make transfer, deposit, and low-balance events visible to the correct user as th
 
 ## Acceptance Criteria
 
-- [ ] Authenticated users receive and display their own SSE notifications.
-- [ ] Disconnects and reconnects are handled without duplicate subscriptions.
-- [ ] Notification rendering supports documented event types.
+- [x] Authenticated users receive and display their own SSE notifications.
+- [x] Disconnects and reconnects are handled without duplicate subscriptions.
+- [x] Notification rendering supports documented event types.
 
 ## Implementation Tasks
 
-- [ ] Implement SSE client and notification state management.
-- [ ] Build notification UI and tests.
+- [x] Implement SSE client and notification state management.
+- [x] Build notification UI and tests.
 
 ## Dependencies
 
