@@ -1,12 +1,14 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './ProtectedRoute'
 import { AuthPage } from '../modules/auth/pages/AuthPage'
+import { DashboardPage } from '../modules/dashboard/pages/DashboardPage'
 import { WalletsPage } from '../modules/wallets/pages/WalletsPage'
 import { TransfersPage } from '../modules/transfers/pages/TransfersPage'
 import { NotificationsPage } from '../modules/notifications/pages/NotificationsPage'
 import { useAppState } from '../state/appState'
 
 const navItems = [
+  { to: '/dashboard', label: 'Dashboard' },
   { to: '/auth', label: 'Authentication' },
   { to: '/wallets', label: 'Wallets' },
   { to: '/transfers', label: 'Transfers' },
@@ -57,15 +59,16 @@ export function AppShell() {
 
       <main className="content-panel">
         <Routes>
-          <Route path="/" element={<Navigate to={isAuthenticated ? '/wallets' : '/auth'} replace />} />
+          <Route path="/" element={<Navigate to={isAuthenticated ? '/dashboard' : '/auth'} replace />} />
           <Route
             path="/auth"
-            element={isAuthenticated ? <Navigate to="/wallets" replace /> : <AuthPage />}
+            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <AuthPage />}
           />
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/wallets" element={<ProtectedRoute><WalletsPage /></ProtectedRoute>} />
           <Route path="/transfers" element={<ProtectedRoute><TransfersPage /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
-          <Route path="*" element={<Navigate to={isAuthenticated ? '/wallets' : '/auth'} replace />} />
+          <Route path="*" element={<Navigate to={isAuthenticated ? '/dashboard' : '/auth'} replace />} />
         </Routes>
       </main>
     </div>
