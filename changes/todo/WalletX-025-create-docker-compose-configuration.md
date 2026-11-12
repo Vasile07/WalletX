@@ -43,7 +43,7 @@ Allow the complete WalletX system to be started and verified with one documented
 
 ## Dependencies
 
-- WalletX-013, WalletX-014, WalletX-016, WalletX-023, WalletX-024, WalletX-026.
+- WalletX-013, WalletX-014, WalletX-016, WalletX-023, WalletX-026, WalletX-043.
 
 ## Notes
 

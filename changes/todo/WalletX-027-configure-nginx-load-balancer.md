@@ -43,7 +43,7 @@ Demonstrate the scalability and availability requirement for the WalletX entry p
 
 ## Dependencies
 
-- WalletX-012, WalletX-024, WalletX-025.
+- WalletX-012, WalletX-025, WalletX-043.
 
 ## Notes
 

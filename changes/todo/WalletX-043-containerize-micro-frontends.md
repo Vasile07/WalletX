@@ -43,7 +43,7 @@ Make the migrated frontend applications reproducibly buildable and runnable as c
 
 ## Dependencies
 
-- WalletX-024, WalletX-042.
+- WalletX-042.
 
 ## Notes
 
