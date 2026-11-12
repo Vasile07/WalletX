@@ -4,10 +4,10 @@
 
 - **ID:** WalletX-022
 - **Title:** Integrate Frontend with Secured APIs
-- **Status:** Todo
+- **Status:** Active
 - **Priority:** Critical
 - **Created:** 2026-10-04
-- **Updated:** 2026-10-04
+- **Updated:** 2026-11-12
 
 ## Description
 
@@ -48,3 +48,5 @@ Deliver an end-to-end authenticated user flow across registration, wallets, depo
 ## Notes
 
 This is the frontend integration milestone before containerized deployment.
+
+Work started on 2026-11-12 with an audit of the API client, auth state, and module-level integration flow against the local frontend test suite.
