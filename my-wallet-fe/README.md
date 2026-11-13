@@ -1,6 +1,6 @@
 # WalletX Frontend
 
-This frontend application provides the React shell for the WalletX digital wallet platform. It includes a shared layout and route placeholders for the planned authentication, wallet, transfer, and notification modules.
+The frontend is an npm workspace containing a Module Federation shell, four independently buildable React remotes, and a shared auth/API contract package.
 
 ## Local setup
 
@@ -8,44 +8,60 @@ This frontend application provides the React shell for the WalletX digital walle
    ```bash
    npm install
    ```
-2. Copy the environment template:
+2. Copy the environment template when local overrides are needed:
    ```bash
    copy .env.example .env
    ```
-3. Start the app:
+3. Start the shell and all remotes:
    ```bash
-   npm run dev -- --host 0.0.0.0
+   npm run dev
    ```
-4. Open the Vite dev server URL displayed in the terminal.
+4. Open the shell at `http://localhost:5173`.
 
 ## Environment configuration
 
-The app expects a base API URL for the backend gateway. The default value is:
+All workspace apps load environment values from this directory. The API base URL targets the backend gateway:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080/api
 ```
 
+The shell uses local remote entry URLs by default:
+
+| Remote | Default remote entry |
+| --- | --- |
+| Authentication | `http://localhost:5174/remoteEntry.js` |
+| Wallet | `http://localhost:5175/remoteEntry.js` |
+| Transfers | `http://localhost:5176/remoteEntry.js` |
+| Notifications | `http://localhost:5177/remoteEntry.js` |
+
+Set `VITE_AUTH_MFE_REMOTE_URL`, `VITE_WALLET_MFE_REMOTE_URL`, `VITE_TRANSFER_MFE_REMOTE_URL`, or `VITE_NOTIFICATION_MFE_REMOTE_URL` to override a remote location for a shell build.
+
 ## Project structure
 
-- `src/components/AppShell.jsx` contains the shared sidebar layout and routing shell.
-- `src/modules/auth` contains the authentication module.
-- `src/modules/wallets` contains the wallet management module with wallet listing, balance curation, and simulated deposit actions.
-- `src/modules/*` stores module-specific pages for each feature area.
-- `src/api/client.js` defines the shared API conventions and request helper.
-- `src/state/appState.js` defines the app state context used by the shell and modules.
+- `apps/shell` owns layout, top-level routes, route protection, and the sole auth/session provider.
+- `apps/auth-mfe` owns login and registration.
+- `apps/wallet-mfe` owns wallet listing, creation, and deposits.
+- `apps/transfer-mfe` owns transfer creation and history.
+- `apps/notification-mfe` owns the authenticated notification stream and feed.
+- `packages/shared` provides the shared auth context contract and gateway API client.
 
 ## Available routes
 
-- `/auth` – authentication shell and session status placeholder
-- `/wallets` – wallet management workflow with wallet creation and simulated deposits
-- `/transfers` – transfer workflow placeholder
-- `/notifications` – notification feed placeholder
+- `/dashboard` — shell-owned dashboard
+- `/auth` — authentication remote
+- `/wallets` — wallet remote
+- `/transfers` — transfer remote
+- `/notifications` — notification remote
 
 ## Verification
 
-Run the production build to check that the app compiles successfully:
+The root commands run across all workspaces:
 
 ```bash
+npm test
+npm run lint
 npm run build
 ```
+
+Each app can also be built independently with `npm run build --workspace @walletx/<app-name>`. Remotes are exposed through Module Federation and share React, React Router, and `@walletx/shared` with the shell.

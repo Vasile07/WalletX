@@ -1,0 +1,15 @@
+{
+  "name": "@walletx/shared",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "vitest run --config vitest.config.js"
+  },
+  "peerDependencies": {
+    "react": "^19.2.8"
+  }
+}
