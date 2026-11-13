@@ -20,20 +20,20 @@ The frontend is an npm workspace containing a Module Federation shell, four inde
 
 ## Environment configuration
 
-All workspace apps load environment values from this directory. The API base URL targets the backend gateway:
+All workspace apps load environment values from this directory. The API base URL targets the public Nginx entry point:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=http://localhost/api
 ```
 
-The shell uses local remote entry URLs by default:
+The shell uses public remote entry URLs by default:
 
 | Remote | Default remote entry |
 | --- | --- |
-| Authentication | `http://localhost:5174/remoteEntry.js` |
-| Wallet | `http://localhost:5175/remoteEntry.js` |
-| Transfers | `http://localhost:5176/remoteEntry.js` |
-| Notifications | `http://localhost:5177/remoteEntry.js` |
+| Authentication | `http://localhost/auth/remoteEntry.js` |
+| Wallet | `http://localhost/wallet/remoteEntry.js` |
+| Transfers | `http://localhost/transfer/remoteEntry.js` |
+| Notifications | `http://localhost/notification/remoteEntry.js` |
 
 Set `VITE_AUTH_MFE_REMOTE_URL`, `VITE_WALLET_MFE_REMOTE_URL`, `VITE_TRANSFER_MFE_REMOTE_URL`, or `VITE_NOTIFICATION_MFE_REMOTE_URL` to override a remote location for a shell build.
 
@@ -84,17 +84,36 @@ Run the images with runtime gateway and remote settings injected at startup:
 
 ```bash
 docker run --rm -p 5173:80 \
-  -e VITE_API_BASE_URL=http://host.docker.internal:8080/api \
-  -e VITE_AUTH_MFE_REMOTE_URL=http://host.docker.internal:5174/remoteEntry.js \
-  -e VITE_WALLET_MFE_REMOTE_URL=http://host.docker.internal:5175/remoteEntry.js \
-  -e VITE_TRANSFER_MFE_REMOTE_URL=http://host.docker.internal:5176/remoteEntry.js \
-  -e VITE_NOTIFICATION_MFE_REMOTE_URL=http://host.docker.internal:5177/remoteEntry.js \
+  -e VITE_API_BASE_URL=http://host.docker.internal/api \
+  -e VITE_AUTH_MFE_REMOTE_URL=http://host.docker.internal/auth/remoteEntry.js \
+  -e VITE_WALLET_MFE_REMOTE_URL=http://host.docker.internal/wallet/remoteEntry.js \
+  -e VITE_TRANSFER_MFE_REMOTE_URL=http://host.docker.internal/transfer/remoteEntry.js \
+  -e VITE_NOTIFICATION_MFE_REMOTE_URL=http://host.docker.internal/notification/remoteEntry.js \
   walletx-shell
 
-docker run --rm -p 5174:80 -e VITE_API_BASE_URL=http://host.docker.internal:8080/api walletx-auth-mfe
-docker run --rm -p 5175:80 -e VITE_API_BASE_URL=http://host.docker.internal:8080/api walletx-wallet-mfe
-docker run --rm -p 5176:80 -e VITE_API_BASE_URL=http://host.docker.internal:8080/api walletx-transfer-mfe
-docker run --rm -p 5177:80 -e VITE_API_BASE_URL=http://host.docker.internal:8080/api walletx-notification-mfe
+docker run --rm -p 5174:80 -e VITE_API_BASE_URL=http://host.docker.internal/api walletx-auth-mfe
+docker run --rm -p 5175:80 -e VITE_API_BASE_URL=http://host.docker.internal/api walletx-wallet-mfe
+docker run --rm -p 5176:80 -e VITE_API_BASE_URL=http://host.docker.internal/api walletx-transfer-mfe
+docker run --rm -p 5177:80 -e VITE_API_BASE_URL=http://host.docker.internal/api walletx-notification-mfe
 ```
 
 The entrypoint rewrites the built `localhost` URLs in the static bundle at startup, so the image stays portable while the actual gateway and remote addresses remain configurable at runtime.
+
+## Compose with Nginx load balancer
+
+The local Docker Compose stack exposes a single public entry point through Nginx on `http://localhost`. Browser requests are routed to the shell at `/`, API traffic is forwarded to `/api`, and each remote is served under its own path (`/auth`, `/wallet`, `/transfer`, `/notification`).
+
+```bash
+cd infra
+docker compose up --build
+docker compose up --scale api-gateway=2
+```
+
+Verify the public entry point and health checks:
+
+```bash
+curl -fsS http://localhost/healthz
+curl -fsS http://localhost/api/actuator/health
+```
+
+The gateway can still be reached directly on `http://localhost:8080` for debugging, while the public path remains balanced through Nginx.

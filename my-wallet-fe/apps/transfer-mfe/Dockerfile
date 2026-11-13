@@ -12,7 +12,7 @@ COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/runtime-config.sh /docker-entrypoint.d/90-walletx-runtime-config.sh
 RUN chmod +x /docker-entrypoint.d/90-walletx-runtime-config.sh
 
-ENV VITE_API_BASE_URL=http://localhost:8080/api
+ENV VITE_API_BASE_URL=http://localhost/api
 
 EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=5 \

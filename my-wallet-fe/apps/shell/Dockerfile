@@ -12,11 +12,11 @@ COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/runtime-config.sh /docker-entrypoint.d/90-walletx-runtime-config.sh
 RUN chmod +x /docker-entrypoint.d/90-walletx-runtime-config.sh
 
-ENV VITE_API_BASE_URL=http://localhost:8080/api \
-    VITE_AUTH_MFE_REMOTE_URL=http://localhost:5174/remoteEntry.js \
-    VITE_WALLET_MFE_REMOTE_URL=http://localhost:5175/remoteEntry.js \
-    VITE_TRANSFER_MFE_REMOTE_URL=http://localhost:5176/remoteEntry.js \
-    VITE_NOTIFICATION_MFE_REMOTE_URL=http://localhost:5177/remoteEntry.js
+ENV VITE_API_BASE_URL=http://localhost/api \
+    VITE_AUTH_MFE_REMOTE_URL=http://localhost/auth/remoteEntry.js \
+    VITE_WALLET_MFE_REMOTE_URL=http://localhost/wallet/remoteEntry.js \
+    VITE_TRANSFER_MFE_REMOTE_URL=http://localhost/transfer/remoteEntry.js \
+    VITE_NOTIFICATION_MFE_REMOTE_URL=http://localhost/notification/remoteEntry.js
 
 EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=5 \
