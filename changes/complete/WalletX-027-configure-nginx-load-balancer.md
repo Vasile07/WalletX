@@ -4,10 +4,10 @@
 
 - **ID:** WalletX-027
 - **Title:** Configure Nginx Load Balancer
-- **Status:** Todo
+- **Status:** Active
 - **Priority:** Medium
 - **Created:** 2026-10-04
-- **Updated:** 2026-10-04
+- **Updated:** 2026-11-13
 
 ## Description
 
@@ -32,14 +32,14 @@ Demonstrate the scalability and availability requirement for the WalletX entry p
 
 ## Acceptance Criteria
 
-- [ ] Nginx routes browser/API traffic to healthy upstream instances.
-- [ ] Multiple gateway instances can serve requests in local Compose.
-- [ ] Configuration and scaling instructions are documented.
+- [x] Nginx routes browser/API traffic to healthy upstream instances.
+- [x] Multiple gateway instances can serve requests in local Compose.
+- [x] Configuration and scaling instructions are documented.
 
 ## Implementation Tasks
 
-- [ ] Add Nginx configuration and Compose integration.
-- [ ] Verify routing, failure behavior, and secured API access.
+- [x] Add Nginx configuration and Compose integration.
+- [x] Verify routing, failure behavior, and secured API access.
 
 ## Dependencies
 
