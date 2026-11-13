@@ -65,3 +65,36 @@ npm run build
 ```
 
 Each app can also be built independently with `npm run build --workspace @walletx/<app-name>`. Remotes are exposed through Module Federation and share React, React Router, and `@walletx/shared` with the shell.
+
+## Containerized builds
+
+Each frontend app is also packaged as a production static-server image. The images build from the workspace root and expose a health endpoint at `/healthz`.
+
+```bash
+cd my-wallet-fe
+
+docker build -f apps/shell/Dockerfile -t walletx-shell .
+docker build -f apps/auth-mfe/Dockerfile -t walletx-auth-mfe .
+docker build -f apps/wallet-mfe/Dockerfile -t walletx-wallet-mfe .
+docker build -f apps/transfer-mfe/Dockerfile -t walletx-transfer-mfe .
+docker build -f apps/notification-mfe/Dockerfile -t walletx-notification-mfe .
+```
+
+Run the images with runtime gateway and remote settings injected at startup:
+
+```bash
+docker run --rm -p 5173:80 \
+  -e VITE_API_BASE_URL=http://host.docker.internal:8080/api \
+  -e VITE_AUTH_MFE_REMOTE_URL=http://host.docker.internal:5174/remoteEntry.js \
+  -e VITE_WALLET_MFE_REMOTE_URL=http://host.docker.internal:5175/remoteEntry.js \
+  -e VITE_TRANSFER_MFE_REMOTE_URL=http://host.docker.internal:5176/remoteEntry.js \
+  -e VITE_NOTIFICATION_MFE_REMOTE_URL=http://host.docker.internal:5177/remoteEntry.js \
+  walletx-shell
+
+docker run --rm -p 5174:80 -e VITE_API_BASE_URL=http://host.docker.internal:8080/api walletx-auth-mfe
+docker run --rm -p 5175:80 -e VITE_API_BASE_URL=http://host.docker.internal:8080/api walletx-wallet-mfe
+docker run --rm -p 5176:80 -e VITE_API_BASE_URL=http://host.docker.internal:8080/api walletx-transfer-mfe
+docker run --rm -p 5177:80 -e VITE_API_BASE_URL=http://host.docker.internal:8080/api walletx-notification-mfe
+```
+
+The entrypoint rewrites the built `localhost` URLs in the static bundle at startup, so the image stays portable while the actual gateway and remote addresses remain configurable at runtime.

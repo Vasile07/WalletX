@@ -4,10 +4,10 @@
 
 - **ID:** WalletX-043
 - **Title:** Containerize Micro-Frontends
-- **Status:** Todo
+- **Status:** Active
 - **Priority:** High
 - **Created:** 2026-11-12
-- **Updated:** 2026-11-12
+- **Updated:** 2026-11-13
 
 ## Description
 
