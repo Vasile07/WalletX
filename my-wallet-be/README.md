@@ -29,6 +29,41 @@ cd my-wallet-be
 ./gradlew :transfer-service:bootRun
 ```
 
+## Docker images
+Each backend module also includes a production-style Dockerfile. Build them from the backend root with the module-specific context:
+
+```bash
+cd my-wallet-be
+
+docker build -f api-gateway/Dockerfile -t walletx/api-gateway .
+docker build -f user-service/Dockerfile -t walletx/user-service .
+docker build -f wallet-service/Dockerfile -t walletx/wallet-service .
+docker build -f transfer-service/Dockerfile -t walletx/transfer-service .
+```
+
+The images read the same runtime settings already exposed by the Spring configuration, meaning secrets and service addresses are injected through environment variables instead of being baked into the image. Typical runtime variables include:
+
+- `JWT_SECRET`
+- `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`
+- `USER_SERVICE_URL`, `WALLET_SERVICE_URL`, `TRANSFER_SERVICE_URL`
+- `WALLET_INTERNAL_TRANSFER_TOKEN`
+- `WALLET_LOW_BALANCE_THRESHOLD`
+- `WALLET_LOW_BALANCE_NOTIFICATION_TOKEN`
+- `NOTIFICATION_GATEWAY_URL`
+- `RABBITMQ_HOST`, `RABBITMQ_PORT`, `RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD`
+- `KAFKA_BOOTSTRAP_SERVERS`, `KAFKA_CONSUMER_GROUP`
+
+Example:
+
+```bash
+docker run --rm -p 8081:8081 \
+  -e DATABASE_URL=jdbc:postgresql://host.docker.internal:5432/walletx \
+  -e DATABASE_USERNAME=walletx \
+  -e DATABASE_PASSWORD=walletx \
+  -e JWT_SECRET=change-me \
+  walletx/user-service
+```
+
 ## Health endpoints
 Each service exposes a basic readiness endpoint:
 - `/api/health`
