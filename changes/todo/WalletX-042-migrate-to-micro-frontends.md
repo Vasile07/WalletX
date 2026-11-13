@@ -50,4 +50,4 @@ Deliver the micro-frontend architecture defined for the WalletX assessment while
 
 ## Notes
 
-Avoid duplicating session state or API client behavior across micro frontends; follow the architecture decision from WalletX-041.
+Use [ADR-005: Micro-Frontend Architecture](../../docs/adr/ADR-005-micro-frontend-architecture.md) as the implementation reference. Avoid duplicating session state or API client behavior across micro frontends.
