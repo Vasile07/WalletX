@@ -57,12 +57,20 @@ Example:
 
 ```bash
 docker run --rm -p 8081:8081 \
-  -e DATABASE_URL=jdbc:postgresql://host.docker.internal:5432/walletx \
+  -e DATABASE_URL=jdbc:postgresql://host.docker.internal:5432/walletx_user \
   -e DATABASE_USERNAME=walletx \
   -e DATABASE_PASSWORD=walletx \
   -e JWT_SECRET=change-me \
   walletx/user-service
 ```
+
+Each backend service now owns its own PostgreSQL database:
+
+- `walletx_user` for user identity and auth metadata
+- `walletx_wallet` for wallet balances and deposit history
+- `walletx_transfer` for transfer records and transfer orchestration history
+
+The Compose stack initializes these databases automatically on first startup via `infra/postgres-init.sql`.
 
 ## Local Docker Compose deployment
 From the repository root, start the full system with a single stack:
@@ -73,7 +81,7 @@ docker compose -f infra/docker-compose.yml up --build
 
 The stack includes:
 - the API gateway and all three backend services
-- PostgreSQL for the shared app database
+- PostgreSQL with three service-owned databases: `walletx_user`, `walletx_wallet`, and `walletx_transfer`
 - RabbitMQ and Kafka
 - the shell and each micro-frontend application on their exposed ports
 
@@ -94,7 +102,7 @@ Each service exposes a basic readiness endpoint:
 
 The user service provides registration at `POST /auth/register`. It accepts a JSON body containing `name`, `email`, and `password`, and returns `201 Created` with the new user's `id`, `name`, and `email`. Invalid input returns `400 Bad Request`; an email that is already registered returns `409 Conflict`. Passwords are stored as BCrypt hashes and are not included in the response.
 
-All backend services use PostgreSQL. Configure their connection with `DATABASE_URL`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD`; local defaults point to `jdbc:postgresql://localhost:5432/walletx`.
+All backend services use PostgreSQL. Configure their connection with `DATABASE_URL`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD`; local defaults point to `jdbc:postgresql://localhost:5432/walletx_user`, `jdbc:postgresql://localhost:5432/walletx_wallet`, and `jdbc:postgresql://localhost:5432/walletx_transfer` respectively.
 
 Set `JWT_SECRET` to the same secret (at least 32 bytes) for the User, Wallet, and Transfer services. The Transfer Service calls the Wallet Service over REST at `WALLET_SERVICE_URL` (default `http://localhost:8082`). Configure `WALLET_INTERNAL_TRANSFER_TOKEN` to the same non-empty secret in both services; the Wallet Service requires this token as well as the caller's JWT on its internal transfer operation.
 
