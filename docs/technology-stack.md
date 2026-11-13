@@ -9,7 +9,7 @@ This document records the current technology decisions for WalletX so future ses
 | Backend | Java with Spring Boot | Build the REST API and microservices |
 | Domain model boilerplate | Project Lombok | Reduce repetitive Java domain-class code while keeping state changes explicit |
 | Frontend | React | Build the WalletX web application |
-| Database | One PostgreSQL database | Persist users, wallets, transfers, transactions, and notifications for the initial solo-developed version |
+| Database | Separate PostgreSQL databases by service boundary | Keep user, wallet, and transfer persistence isolated while keeping local setup reproducible |
 | Persistence | Spring Data JPA with Hibernate | Java ORM for service-owned data in PostgreSQL |
 | Authentication | Spring Security with JWT | Secure REST endpoints and authenticate users |
 | API Gateway | Spring Cloud Gateway | Provide a single public entry point and route requests to services |
@@ -24,7 +24,7 @@ This document records the current technology decisions for WalletX so future ses
 ## Architecture Decisions
 
 - WalletX will contain three main backend microservices: User Service, Wallet Service, and Transfer Service.
-- The initial version uses one shared PostgreSQL database. Services retain logical ownership of their domain tables and access other domains through APIs or events; separate databases are not required.
+- The initial version uses separate PostgreSQL databases for the user, wallet, and transfer domains. Services keep logical ownership of their domain tables and access other domains through APIs or events; the database boundaries reinforce that separation locally.
 - The frontend will be a React shell with modules for authentication, wallets, transfers, and notifications.
 - REST APIs will be protected with JWT bearer tokens.
 - The User Service requires `JWT_SECRET` to be configured with a signing key of at least 32 bytes; never use a committed or default signing secret.

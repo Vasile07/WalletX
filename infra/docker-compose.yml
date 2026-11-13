@@ -11,6 +11,7 @@ services:
       - "5432:5432"
     volumes:
       - walletx-postgres-data:/var/lib/postgresql/data
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/01-create-databases.sql:ro
     networks:
       - walletx-network
     healthcheck:
@@ -77,7 +78,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: jdbc:postgresql://postgres:5432/walletx
+      DATABASE_URL: jdbc:postgresql://postgres:5432/walletx_user
       DATABASE_USERNAME: walletx
       DATABASE_PASSWORD: walletx
       JWT_SECRET: change-me-please-use-a-long-secret
@@ -104,7 +105,7 @@ services:
       user-service:
         condition: service_started
     environment:
-      DATABASE_URL: jdbc:postgresql://postgres:5432/walletx
+      DATABASE_URL: jdbc:postgresql://postgres:5432/walletx_wallet
       DATABASE_USERNAME: walletx
       DATABASE_PASSWORD: walletx
       JWT_SECRET: change-me-please-use-a-long-secret
@@ -138,7 +139,7 @@ services:
       wallet-service:
         condition: service_healthy
     environment:
-      DATABASE_URL: jdbc:postgresql://postgres:5432/walletx
+      DATABASE_URL: jdbc:postgresql://postgres:5432/walletx_transfer
       DATABASE_USERNAME: walletx
       DATABASE_PASSWORD: walletx
       JWT_SECRET: change-me-please-use-a-long-secret
