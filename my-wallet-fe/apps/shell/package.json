@@ -1,0 +1,19 @@
+{
+  "name": "@walletx/shell",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5173",
+    "build": "vite build",
+    "preview": "vite preview --port 5173",
+    "test": "vitest run --config vitest.config.js",
+    "lint": "oxlint src"
+  },
+  "dependencies": {
+    "@walletx/shared": "1.0.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.4"
+  }
+}
