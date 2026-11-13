@@ -1,13 +1,37 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: walletx-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: walletx
+      POSTGRES_USER: walletx
+      POSTGRES_PASSWORD: walletx
+    ports:
+      - "5432:5432"
+    volumes:
+      - walletx-postgres-data:/var/lib/postgresql/data
+    networks:
+      - walletx-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U walletx -d walletx"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   rabbitmq:
     image: rabbitmq:3.13-management
     container_name: walletx-rabbitmq
+    restart: unless-stopped
     ports:
       - "5672:5672"
       - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - walletx-network
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
@@ -18,6 +42,7 @@ services:
   kafka:
     image: bitnami/kafka:3.9.0
     container_name: walletx-kafka
+    restart: unless-stopped
     ports:
       - "9092:9092"
     environment:
@@ -34,9 +59,244 @@ services:
       KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 1
       ALLOW_PLAINTEXT_LISTENER: "yes"
+    networks:
+      - walletx-network
     healthcheck:
       test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 20
       start_period: 20s
+
+  user-service:
+    build:
+      context: ../my-wallet-be
+      dockerfile: user-service/Dockerfile
+    container_name: walletx-user-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/walletx
+      DATABASE_USERNAME: walletx
+      DATABASE_PASSWORD: walletx
+      JWT_SECRET: change-me-please-use-a-long-secret
+      JWT_EXPIRATION_MS: 3600000
+    ports:
+      - "8081:8081"
+    networks:
+      - walletx-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+
+  wallet-service:
+    build:
+      context: ../my-wallet-be
+      dockerfile: wallet-service/Dockerfile
+    container_name: walletx-wallet-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/walletx
+      DATABASE_USERNAME: walletx
+      DATABASE_PASSWORD: walletx
+      JWT_SECRET: change-me-please-use-a-long-secret
+      WALLET_INTERNAL_TRANSFER_TOKEN: walletx-internal-transfer-token
+      WALLET_LOW_BALANCE_THRESHOLD: "100.00"
+      NOTIFICATION_GATEWAY_URL: http://api-gateway:8080
+      WALLET_LOW_BALANCE_NOTIFICATION_TOKEN: walletx-low-balance-token
+    ports:
+      - "8082:8082"
+    networks:
+      - walletx-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8082/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+
+  transfer-service:
+    build:
+      context: ../my-wallet-be
+      dockerfile: transfer-service/Dockerfile
+    container_name: walletx-transfer-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      wallet-service:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/walletx
+      DATABASE_USERNAME: walletx
+      DATABASE_PASSWORD: walletx
+      JWT_SECRET: change-me-please-use-a-long-secret
+      WALLET_SERVICE_URL: http://wallet-service:8082
+      WALLET_INTERNAL_TRANSFER_TOKEN: walletx-internal-transfer-token
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_AUTO_STARTUP: "true"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_CONSUMER_GROUP: walletx-transfer-audit
+    ports:
+      - "8083:8083"
+    networks:
+      - walletx-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8083/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+
+  api-gateway:
+    build:
+      context: ../my-wallet-be
+      dockerfile: api-gateway/Dockerfile
+    container_name: walletx-api-gateway
+    depends_on:
+      user-service:
+        condition: service_healthy
+      wallet-service:
+        condition: service_healthy
+      transfer-service:
+        condition: service_healthy
+    environment:
+      JWT_SECRET: change-me-please-use-a-long-secret
+      USER_SERVICE_URL: http://user-service:8081
+      WALLET_SERVICE_URL: http://wallet-service:8082
+      TRANSFER_SERVICE_URL: http://transfer-service:8083
+      WALLET_LOW_BALANCE_NOTIFICATION_TOKEN: walletx-low-balance-token
+    ports:
+      - "8080:8080"
+    networks:
+      - walletx-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+
+  auth-mfe:
+    build:
+      context: ../my-wallet-fe
+      dockerfile: apps/auth-mfe/Dockerfile
+    container_name: walletx-auth-mfe
+    environment:
+      VITE_API_BASE_URL: http://api-gateway:8080/api
+    ports:
+      - "5174:80"
+    networks:
+      - walletx-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  wallet-mfe:
+    build:
+      context: ../my-wallet-fe
+      dockerfile: apps/wallet-mfe/Dockerfile
+    container_name: walletx-wallet-mfe
+    environment:
+      VITE_API_BASE_URL: http://api-gateway:8080/api
+    ports:
+      - "5175:80"
+    networks:
+      - walletx-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  transfer-mfe:
+    build:
+      context: ../my-wallet-fe
+      dockerfile: apps/transfer-mfe/Dockerfile
+    container_name: walletx-transfer-mfe
+    environment:
+      VITE_API_BASE_URL: http://api-gateway:8080/api
+    ports:
+      - "5176:80"
+    networks:
+      - walletx-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  notification-mfe:
+    build:
+      context: ../my-wallet-fe
+      dockerfile: apps/notification-mfe/Dockerfile
+    container_name: walletx-notification-mfe
+    environment:
+      VITE_API_BASE_URL: http://api-gateway:8080/api
+    ports:
+      - "5177:80"
+    networks:
+      - walletx-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  shell:
+    build:
+      context: ../my-wallet-fe
+      dockerfile: apps/shell/Dockerfile
+    container_name: walletx-shell
+    depends_on:
+      auth-mfe:
+        condition: service_healthy
+      wallet-mfe:
+        condition: service_healthy
+      transfer-mfe:
+        condition: service_healthy
+      notification-mfe:
+        condition: service_healthy
+    environment:
+      VITE_API_BASE_URL: http://api-gateway:8080/api
+      VITE_AUTH_MFE_REMOTE_URL: http://auth-mfe/remoteEntry.js
+      VITE_WALLET_MFE_REMOTE_URL: http://wallet-mfe/remoteEntry.js
+      VITE_TRANSFER_MFE_REMOTE_URL: http://transfer-mfe/remoteEntry.js
+      VITE_NOTIFICATION_MFE_REMOTE_URL: http://notification-mfe/remoteEntry.js
+    ports:
+      - "5173:80"
+    networks:
+      - walletx-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+networks:
+  walletx-network:
+    driver: bridge
+
+volumes:
+  walletx-postgres-data:

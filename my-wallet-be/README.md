@@ -64,6 +64,29 @@ docker run --rm -p 8081:8081 \
   walletx/user-service
 ```
 
+## Local Docker Compose deployment
+From the repository root, start the full system with a single stack:
+
+```bash
+docker compose -f infra/docker-compose.yml up --build
+```
+
+The stack includes:
+- the API gateway and all three backend services
+- PostgreSQL for the shared app database
+- RabbitMQ and Kafka
+- the shell and each micro-frontend application on their exposed ports
+
+The application services are wired to each other through the Docker network using Compose service names such as `postgres`, `rabbitmq`, `kafka`, `user-service`, `wallet-service`, `transfer-service`, and `api-gateway` instead of `localhost` addresses.
+
+Reset the environment with:
+
+```bash
+docker compose -f infra/docker-compose.yml down -v
+```
+
+This removes the named volumes and returns the database to a clean state. Use `docker compose down` without `-v` if you want to keep the persisted PostgreSQL data between runs.
+
 ## Health endpoints
 Each service exposes a basic readiness endpoint:
 - `/api/health`
